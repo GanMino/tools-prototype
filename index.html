@@ -111,6 +111,18 @@ body{
 .nav-item.active{background:var(--gold);color:#000;box-shadow:3px 3px 0 0 #000}
 .nav-item.active .ico{background:var(--brown-dark);color:var(--gold-light)}
 
+.nav-cat{
+  font-family:var(--font-title);font-size:10px;
+  color:var(--brown);letter-spacing:1px;
+  padding:12px 4px 2px;
+}
+.cat-title{
+  font-family:var(--font-title);font-size:13px;color:var(--gold);
+  margin:24px 0 12px;
+  text-shadow:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000;
+}
+.cat-title:first-child{margin-top:0}
+
 .side-foot{padding:14px 18px;border-top:4px solid #000;margin-top:auto;display:flex;align-items:center;gap:8px}
 .side-foot .hearts{display:flex;gap:3px}
 .side-foot .h{width:14px;height:14px}
@@ -232,9 +244,13 @@ h2{font-family:var(--font-title);font-size:18px;color:var(--gold);text-shadow:2p
 }
 .io:focus{border-color:var(--gold)}
 .io--out{background:#0a0a08;color:var(--gold-light)}
-.io::-webkit-scrollbar{width:12px}
-.io::-webkit-scrollbar-thumb{background:var(--brown);border:2px solid #000}
-.io::-webkit-scrollbar-track{background:#0d0d0d}
+/* 全局像素风滚动条 */
+*{scrollbar-width:thin;scrollbar-color:var(--brown) #0d0c0a}
+::-webkit-scrollbar{width:14px;height:14px}
+::-webkit-scrollbar-track{background:#0d0c0a;border:2px solid #000}
+::-webkit-scrollbar-thumb{background:var(--brown);border:3px solid #000}
+::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+::-webkit-scrollbar-corner{background:#0d0c0a}
 
 /* 时间戳字段 */
 .field{margin-bottom:14px}
@@ -365,23 +381,9 @@ select.btn{appearance:none;-webkit-appearance:none}
         <h1>工具集</h1>
         <div class="sub">8-BIT TOOLBOX</div>
       </div>
-      <nav class="nav">
-        <a class="nav-item active" data-tool="home" onclick="showView('home')"><span class="ico">首</span>首页</a>
-        <a class="nav-item" data-tool="json" onclick="showView('json')"><span class="ico">{}</span>JSON 格式化</a>
-        <a class="nav-item" data-tool="url" onclick="showView('url')"><span class="ico">%</span>URL 编解码</a>
-        <a class="nav-item" data-tool="b64" onclick="showView('b64')"><span class="ico">64</span>Base64 编解码</a>
-        <a class="nav-item" data-tool="ts" onclick="showView('ts')"><span class="ico">时</span>时间戳转换</a>
-        <a class="nav-item" data-tool="ws" onclick="showView('ws')"><span class="ico">连</span>WebSocket</a>
-        <a class="nav-item" data-tool="mqtt" onclick="showView('mqtt')"><span class="ico">讯</span>MQTT</a>
-        <a class="nav-item" data-tool="uuid" onclick="showView('uuid')"><span class="ico">码</span>UUID 生成</a>
-        <a class="nav-item" data-tool="hash" onclick="showView('hash')"><span class="ico">哈</span>哈希计算</a>
-        <a class="nav-item" data-tool="re" onclick="showView('re')"><span class="ico">正</span>正则测试</a>
-        <a class="nav-item" data-tool="color" onclick="showView('color')"><span class="ico">色</span>颜色转换</a>
-        <a class="nav-item" data-tool="qr" onclick="showView('qr')"><span class="ico">维</span>二维码生成</a>
-        <a class="nav-item" data-tool="jwt" onclick="showView('jwt')"><span class="ico">令</span>JWT 解析</a>
-        <a class="nav-item" data-tool="urlp" onclick="showView('urlp')"><span class="ico">址</span>URL 解析器</a>
-        <a class="nav-item" data-tool="hmac" onclick="showView('hmac')"><span class="ico">签</span>HMAC 计算</a>
-        <a class="nav-item" data-tool="base" onclick="showView('base')"><span class="ico">进</span>进制转换</a>
+      <nav class="nav" id="nav">
+        <a class="nav-item active" data-tool="home"><span class="ico">首</span>首页</a>
+        <!-- 分类菜单由 JS 渲染 -->
       </nav>
       <div class="side-foot">
         <div class="hearts">
@@ -406,7 +408,7 @@ select.btn{appearance:none;-webkit-appearance:none}
             <span class="cursor"></span>
           </div>
         </div>
-        <div class="grid">
+        <div class="grid" id="home-grid">
           <a class="card" onclick="showView('json')">
             <div class="c-ico">{}</div>
             <div class="c-name">JSON 格式化</div>
@@ -942,6 +944,86 @@ select.btn{appearance:none;-webkit-appearance:none}
         </div>
       </section>
 
+      <!-- 字符统计 -->
+      <section class="view view--tool" id="view-stats">
+        <div class="title-row"><div class="badge">数</div><h2>字符统计</h2></div>
+        <p class="tool-desc">统计字符、单词、行、字节与中文字数。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="countStats()">统计</button>
+          <button class="btn btn--gold" onclick="copyText('stats-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('stats-in','stats-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">文本</span></div>
+            <textarea class="io" id="stats-in" spellcheck="false" placeholder="输入要统计的文本…"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">统计结果</span></div>
+            <textarea class="io io--out" id="stats-out" readonly spellcheck="false" placeholder="统计结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 大小写 -->
+      <section class="view view--tool" id="view-case">
+        <div class="title-row"><div class="badge">Aa</div><h2>大小写转换</h2></div>
+        <p class="tool-desc">大写 / 小写 / 首字母大写 / 反转大小写。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="toUpper()">全部大写</button>
+          <button class="btn" onclick="toLower()">全部小写</button>
+          <button class="btn btn--blue" onclick="toTitle()">首字母大写</button>
+          <button class="btn" onclick="toToggle()">反转大小写</button>
+          <button class="btn btn--gold" onclick="copyText('case-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('case-in','case-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">原文</span></div>
+            <textarea class="io" id="case-in" spellcheck="false" placeholder="输入文本…"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果（只读）</span></div>
+            <textarea class="io io--out" id="case-out" readonly spellcheck="false" placeholder="转换结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 随机密码 -->
+      <section class="view view--tool" id="view-pwd">
+        <div class="title-row"><div class="badge">密</div><h2>随机密码</h2></div>
+        <p class="tool-desc">生成强随机密码（使用 crypto.getRandomValues）。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="genPwd()">生成</button>
+          <button class="btn btn--gold" onclick="copyText('pwd-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('pwd-out','pwd-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">参数</span></div>
+            <div class="field">
+              <label>密码长度（4-128）</label>
+              <input class="io-input" id="pwd-len" value="16" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label style="display:flex;flex-wrap:wrap;gap:14px">
+                <span><input type="checkbox" id="pwd-upper" checked> 大写</span>
+                <span><input type="checkbox" id="pwd-lower" checked> 小写</span>
+                <span><input type="checkbox" id="pwd-num" checked> 数字</span>
+                <span><input type="checkbox" id="pwd-sym" checked> 符号</span>
+              </label>
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">密码</span></div>
+            <textarea class="io io--out" id="pwd-out" readonly spellcheck="false" placeholder="生成的密码…"></textarea>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -1451,12 +1533,127 @@ function baseClear(){
   setVal('base-out-oct',''); setVal('base-out-bin',''); msg('ok','已清空');
 }
 
+/* ---- 工具菜单（数据驱动，按分类渲染） ---- */
+var TOOLS = [
+  {cat:'编码与转换', id:'json',  name:'JSON 格式化', icon:'{}', desc:'格式化 / 压缩 / 校验 JSON'},
+  {cat:'编码与转换', id:'b64',   name:'Base64 编解码', icon:'64', desc:'Base64 编码与解码（支持中文）'},
+  {cat:'编码与转换', id:'url',   name:'URL 编解码', icon:'%', desc:'URL 编码与解码'},
+  {cat:'编码与转换', id:'urlp',  name:'URL 解析器', icon:'址', desc:'解析 URL 组成与查询参数'},
+  {cat:'编码与转换', id:'ts',    name:'时间戳转换', icon:'时', desc:'Unix 时间戳 ↔ 日期时间'},
+  {cat:'编码与转换', id:'color', name:'颜色转换', icon:'色', desc:'HEX / RGB / HSL 互转'},
+  {cat:'编码与转换', id:'base',  name:'进制转换', icon:'进', desc:'二 / 八 / 十 / 十六进制互转'},
+  {cat:'哈希与安全', id:'hash',  name:'哈希计算', icon:'哈', desc:'MD5 / SHA-1 / SHA-256 / SHA-512'},
+  {cat:'哈希与安全', id:'hmac',  name:'HMAC 计算', icon:'签', desc:'HMAC-MD5 / SHA1 / SHA256 / SHA512'},
+  {cat:'哈希与安全', id:'jwt',   name:'JWT 解析', icon:'令', desc:'解析 Header 与 Payload'},
+  {cat:'文本工具',   id:'re',    name:'正则测试', icon:'正', desc:'正则匹配与高亮测试'},
+  {cat:'文本工具',   id:'stats', name:'字符统计', icon:'数', desc:'字符 / 单词 / 行 / 字节统计'},
+  {cat:'文本工具',   id:'case',  name:'大小写转换', icon:'Aa', desc:'大写 / 小写 / 首字母 / 反转'},
+  {cat:'生成器',     id:'uuid',  name:'UUID 生成', icon:'码', desc:'批量生成 UUID v4'},
+  {cat:'生成器',     id:'qr',    name:'二维码生成', icon:'维', desc:'文本 / 网址生成二维码'},
+  {cat:'生成器',     id:'pwd',   name:'随机密码', icon:'密', desc:'生成强随机密码'},
+  {cat:'网络调试',   id:'ws',    name:'WebSocket', icon:'连', desc:'WebSocket 连接与消息调试'},
+  {cat:'网络调试',   id:'mqtt',  name:'MQTT', icon:'讯', desc:'MQTT 订阅 / 发布调试'}
+];
+
+function renderMenu(){
+  var nav=document.getElementById('nav');
+  var grid=document.getElementById('home-grid');
+  var cats=[], seen={};
+  TOOLS.forEach(function(t){ if(!seen[t.cat]){ seen[t.cat]=1; cats.push(t.cat); } });
+  var navH='', gridH='';
+  cats.forEach(function(cat){
+    navH += '<div class="nav-cat">'+cat+'</div>';
+    gridH += '<h3 class="cat-title">'+cat+'</h3><div class="grid">';
+    TOOLS.forEach(function(t){
+      if(t.cat!==cat) return;
+      navH += '<a class="nav-item" data-tool="'+t.id+'"><span class="ico">'+t.icon+'</span>'+t.name+'</a>';
+      gridH += '<a class="card" data-tool="'+t.id+'"><div class="c-ico">'+t.icon+'</div><div class="c-name">'+t.name+'</div><div class="c-desc">'+t.desc+'</div></a>';
+    });
+    gridH += '</div>';
+  });
+  nav.insertAdjacentHTML('beforeend', navH);
+  grid.innerHTML = gridH;
+}
+
+/* 事件委托：点击带 data-tool 的元素切换视图 */
+document.addEventListener('click', function(e){
+  var t=e.target;
+  while(t && t!==document){
+    if(t.getAttribute && t.getAttribute('data-tool')){ showView(t.getAttribute('data-tool')); return; }
+    t=t.parentNode;
+  }
+});
+
+/* ---- 字符统计 ---- */
+function countStats(){
+  var text=val('stats-in');
+  if(text===''){msg('error','请输入文本');return}
+  var chars=text.length;
+  var noSpace=text.split(' ').join('').length;
+  var words=text.trim()===''?0:text.trim().split(/\s+/).length;
+  var lines=text===''?0:text.split('\n').length;
+  var bytes=new TextEncoder().encode(text).length;
+  var cn=0;
+  for(var i=0;i<text.length;i++){var c=text.charCodeAt(i);if(c>=0x4e00&&c<=0x9fff)cn++;}
+  var out=[
+    '字符数（含空格）: '+chars,
+    '字符数（不含空格）: '+noSpace,
+    '单词数: '+words,
+    '行数: '+lines,
+    '中文字数: '+cn,
+    '字节数(UTF-8): '+bytes
+  ];
+  setVal('stats-out', out.join('\n'));
+  msg('ok','统计完成');
+}
+
+/* ---- 大小写转换 ---- */
+function toUpper(){ setVal('case-out', val('case-in').toUpperCase()); msg('ok','已转大写'); }
+function toLower(){ setVal('case-out', val('case-in').toLowerCase()); msg('ok','已转小写'); }
+function toTitle(){
+  var s=val('case-in').toLowerCase();
+  var out=s.split(' ').map(function(w){ return w?w.charAt(0).toUpperCase()+w.slice(1):w; }).join(' ');
+  setVal('case-out', out);
+  msg('ok','已转首字母大写');
+}
+function toToggle(){
+  var s=val('case-in');
+  var out='';
+  for(var i=0;i<s.length;i++){
+    var c=s.charAt(i);
+    out += c===c.toUpperCase() ? c.toLowerCase() : c.toUpperCase();
+  }
+  setVal('case-out', out);
+  msg('ok','已反转大小写');
+}
+
+/* ---- 随机密码 ---- */
+function genPwd(){
+  var len=parseInt(val('pwd-len'),10);
+  if(isNaN(len)||len<4)len=4;
+  if(len>128)len=128;
+  var sets='';
+  if(document.getElementById('pwd-upper').checked)sets+='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if(document.getElementById('pwd-lower').checked)sets+='abcdefghijklmnopqrstuvwxyz';
+  if(document.getElementById('pwd-num').checked)sets+='0123456789';
+  if(document.getElementById('pwd-sym').checked)sets+='!@#$%^&*()-_=+[]{};:,.<>?';
+  if(!sets){msg('error','请至少选择一类字符');return}
+  var out='';
+  var arr=new Uint32Array(len);
+  if(window.crypto&&crypto.getRandomValues){ crypto.getRandomValues(arr); }
+  else{ for(var i=0;i<len;i++)arr[i]=Math.floor(Math.random()*0xffffffff); }
+  for(var j=0;j<len;j++){ out+=sets.charAt(arr[j]%sets.length); }
+  setVal('pwd-out', out);
+  msg('ok','已生成 '+len+' 位密码');
+}
+
 /* ---- hash 路由 ---- */
 function initHash(){
   var h=location.hash.replace('#','');
   if(h&&document.getElementById('view-'+h)){showView(h)}
 }
 window.addEventListener('hashchange',initHash);
+renderMenu();
 initHash();
 </script>
 </body>
