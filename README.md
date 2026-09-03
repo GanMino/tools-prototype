@@ -10,6 +10,8 @@
 | URL 编解码 | URL 编码（encodeURIComponent）与解码 |
 | Base64 编解码 | Base64 编码与解码，支持中文 UTF-8 |
 | 时间戳转换 | Unix 时间戳（秒）与日期时间互转 |
+| WebSocket | WebSocket 连接与消息收发调试 |
+| MQTT | MQTT 订阅 / 发布调试（WebSocket 连接） |
 
 ## 特点
 

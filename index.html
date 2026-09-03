@@ -246,6 +246,32 @@ h2{font-family:var(--font-title);font-size:18px;color:var(--gold);text-shadow:2p
 }
 .io-input:focus{border-color:var(--gold)}
 
+/* ============ 连接状态（塞尔达风动画） ============ */
+.conn-status{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;margin-bottom:10px;
+  background:#0d0c0a;border:3px solid #000;
+  box-shadow:2px 2px 0 0 #000;
+  font-size:13px;color:var(--tan);
+  flex-shrink:0;
+}
+.conn-heart{width:20px;height:20px;flex:0 0 20px;image-rendering:pixelated}
+.conn-heart .heart-fill{transition:none}
+.conn-status[data-state="connected"] .conn-heart{animation:heartBeat 1s steps(2,end) infinite}
+.conn-status[data-state="connecting"] .conn-heart{animation:blink .5s steps(1) infinite}
+.conn-status[data-state="disconnected"] .conn-heart{animation:none}
+.conn-sparkle{
+  width:8px;height:8px;flex:0 0 8px;margin-left:auto;
+  background:var(--gold-light);
+  clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);
+  display:none;
+}
+.conn-status[data-state="connected"] .conn-sparkle{display:block;animation:sparkle .9s steps(2,end) infinite}
+@keyframes heartBeat{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes sparkle{0%,100%{opacity:1;transform:scale(1) rotate(0deg)}50%{opacity:.25;transform:scale(.55) rotate(45deg)}}
+
+.send-row{display:flex;gap:10px;margin-top:4px}
+
 /* ============ 消息框 ============ */
 .msg-box{
   position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
@@ -312,6 +338,8 @@ h2{font-family:var(--font-title);font-size:18px;color:var(--gold);text-shadow:2p
         <a class="nav-item" data-tool="url" onclick="showView('url')"><span class="ico">%</span>URL 编解码</a>
         <a class="nav-item" data-tool="b64" onclick="showView('b64')"><span class="ico">64</span>Base64 编解码</a>
         <a class="nav-item" data-tool="ts" onclick="showView('ts')"><span class="ico">时</span>时间戳转换</a>
+        <a class="nav-item" data-tool="ws" onclick="showView('ws')"><span class="ico">连</span>WebSocket</a>
+        <a class="nav-item" data-tool="mqtt" onclick="showView('mqtt')"><span class="ico">讯</span>MQTT</a>
       </nav>
       <div class="side-foot">
         <div class="hearts">
@@ -356,6 +384,16 @@ h2{font-family:var(--font-title);font-size:18px;color:var(--gold);text-shadow:2p
             <div class="c-ico">时</div>
             <div class="c-name">时间戳转换</div>
             <div class="c-desc">Unix 时间戳 ↔ 日期时间</div>
+          </a>
+          <a class="card" onclick="showView('ws')">
+            <div class="c-ico">连</div>
+            <div class="c-name">WebSocket</div>
+            <div class="c-desc">WebSocket 连接与消息收发调试</div>
+          </a>
+          <a class="card" onclick="showView('mqtt')">
+            <div class="c-ico">讯</div>
+            <div class="c-name">MQTT</div>
+            <div class="c-desc">MQTT 订阅 / 发布调试</div>
           </a>
         </div>
       </section>
@@ -461,11 +499,91 @@ h2{font-family:var(--font-title);font-size:18px;color:var(--gold);text-shadow:2p
         </div>
       </section>
 
+      <!-- WebSocket -->
+      <section class="view view--tool" id="view-ws">
+        <div class="title-row"><div class="badge">连</div><h2>WebSocket 调试</h2></div>
+        <p class="tool-desc">连接 WebSocket 服务，收发消息。默认 echo 服务用于自测。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="wsConnect()">连接</button>
+          <button class="btn btn--red" onclick="wsDisconnect()">断开</button>
+          <button class="btn btn--gold" onclick="wsClear()">清空日志</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">地址 + 消息</span></div>
+            <div class="field">
+              <label>WebSocket 地址</label>
+              <input class="io-input" id="ws-url" value="wss://ws.postman-echo.com/raw" placeholder="wss://ws.postman-echo.com/raw">
+            </div>
+            <div class="field">
+              <label>发送内容</label>
+              <input class="io-input" id="ws-msg" value="hello" placeholder="hello">
+            </div>
+            <div class="send-row">
+              <button class="btn" onclick="wsSend()">发送</button>
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">状态 + 日志</span></div>
+            <div class="conn-status" id="ws-status" data-state="disconnected">
+              <svg class="conn-heart" viewBox="0 0 16 16" shape-rendering="crispEdges"><path class="heart-fill" d="M8 14 C3 10 1 7 1 4 A3 3 0 0 1 8 2 A3 3 0 0 1 15 4 C15 7 13 10 8 14 Z" fill="#555555"/></svg>
+              <span class="conn-text">未连接</span>
+              <span class="conn-sparkle"></span>
+            </div>
+            <textarea class="io io--out" id="ws-log" readonly spellcheck="false" placeholder="连接与消息日志…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- MQTT -->
+      <section class="view view--tool" id="view-mqtt">
+        <div class="title-row"><div class="badge">讯</div><h2>MQTT 调试</h2></div>
+        <p class="tool-desc">连接 MQTT Broker（WebSocket），订阅 / 发布主题。默认 EMQX 公共 Broker。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="mqttConnect()">连接</button>
+          <button class="btn btn--red" onclick="mqttDisconnect()">断开</button>
+          <button class="btn btn--gold" onclick="mqttClear()">清空日志</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">Broker + 主题</span></div>
+            <div class="field">
+              <label>Broker 地址（WebSocket）</label>
+              <input class="io-input" id="mqtt-url" value="wss://broker.emqx.io:8084/mqtt" placeholder="wss://broker.emqx.io:8084/mqtt">
+            </div>
+            <div class="field">
+              <label>主题 Topic</label>
+              <input class="io-input" id="mqtt-topic" value="zelda-tools/test" placeholder="zelda-tools/test">
+            </div>
+            <div class="field">
+              <label>发送内容</label>
+              <input class="io-input" id="mqtt-msg" value="hello mqtt" placeholder="hello mqtt">
+            </div>
+            <div class="send-row">
+              <button class="btn" onclick="mqttSubscribe()">订阅</button>
+              <button class="btn btn--blue" onclick="mqttPublish()">发布</button>
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">状态 + 日志</span></div>
+            <div class="conn-status" id="mqtt-status" data-state="disconnected">
+              <svg class="conn-heart" viewBox="0 0 16 16" shape-rendering="crispEdges"><path class="heart-fill" d="M8 14 C3 10 1 7 1 4 A3 3 0 0 1 8 2 A3 3 0 0 1 15 4 C15 7 13 10 8 14 Z" fill="#555555"/></svg>
+              <span class="conn-text">未连接</span>
+              <span class="conn-sparkle"></span>
+            </div>
+            <textarea class="io io--out" id="mqtt-log" readonly spellcheck="false" placeholder="连接与消息日志…"></textarea>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
   <div class="msg-box" id="msg-box"><span class="m-cur"></span><span class="msg-text"></span></div>
 
+<script async src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
 <script>
 function $(id){return document.getElementById(id)}
 
@@ -598,6 +716,101 @@ function tsNow(){
   setVal('ts-out',String(sec)+' 秒');
   msg('ok','已填入当前时间')
 }
+
+/* ---- 连接状态（塞尔达风） ---- */
+function setConn(id, state, text){
+  var el=$(id);
+  el.setAttribute('data-state', state);
+  el.querySelector('.conn-text').textContent=text;
+  var color = state==='connected' ? '#E4000F' : state==='connecting' ? '#FC9838' : '#555555';
+  el.querySelector('.heart-fill').setAttribute('fill', color);
+}
+
+/* ---- WebSocket ---- */
+var ws=null;
+function wsLog(type, text){
+  var el=$('ws-log');
+  var d=new Date();
+  var ts=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+  var prefix = type==='in' ? '<< 收到' : type==='out' ? '>> 发送' : '-- 系统';
+  el.value += '['+ts+'] '+prefix+'  '+text+'\n';
+  el.scrollTop = el.scrollHeight;
+}
+function wsConnect(){
+  var url=val('ws-url').trim();
+  if(!url){msg('error','请输入 WebSocket 地址');return}
+  if(ws){try{ws.close()}catch(e){}}
+  setConn('ws-status','connecting','连接中…');
+  try{ ws=new WebSocket(url); }
+  catch(e){ setConn('ws-status','disconnected','地址无效'); msg('error','地址无效：'+e.message); return; }
+  ws.onopen=function(){ setConn('ws-status','connected','已连接'); wsLog('system','已连接 '+url); msg('ok','WebSocket 已连接'); };
+  ws.onmessage=function(ev){ wsLog('in', ev.data); };
+  ws.onerror=function(){ setConn('ws-status','disconnected','连接出错'); wsLog('system','连接出错'); };
+  ws.onclose=function(){ setConn('ws-status','disconnected','已断开'); wsLog('system','连接已关闭'); };
+}
+function wsSend(){
+  if(!ws || ws.readyState!==1){msg('error','请先连接');return}
+  var m=val('ws-msg');
+  if(m===''){msg('error','请输入要发送的内容');return}
+  ws.send(m); wsLog('out', m); setVal('ws-msg','');
+}
+function wsDisconnect(){
+  if(ws){try{ws.close()}catch(e){}}
+  setConn('ws-status','disconnected','已断开'); wsLog('system','手动断开');
+}
+function wsClear(){ setVal('ws-log',''); msg('ok','日志已清空'); }
+
+/* ---- MQTT ---- */
+var mqClient=null;
+function mqttLog(type, text){
+  var el=$('mqtt-log');
+  var d=new Date();
+  var ts=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+  var prefix = type==='in' ? '<< 收到' : type==='out' ? '>> 发布' : '-- 系统';
+  el.value += '['+ts+'] '+prefix+'  '+text+'\n';
+  el.scrollTop = el.scrollHeight;
+}
+function mqttConnect(){
+  if(typeof mqtt==='undefined'){msg('error','MQTT 库未加载，请检查网络后刷新');return}
+  var url=val('mqtt-url').trim();
+  if(!url){msg('error','请输入 Broker 地址');return}
+  if(mqClient){try{mqClient.end(true)}catch(e){}}
+  setConn('mqtt-status','connecting','连接中…');
+  try{
+    mqClient = mqtt.connect(url, {
+      clientId:'zelda-tools-'+Math.random().toString(16).slice(2,10),
+      keepalive:30, reconnectPeriod:0, connectTimeout:8000
+    });
+  }catch(e){ setConn('mqtt-status','disconnected','地址无效'); msg('error','地址无效：'+e.message); return; }
+  mqClient.on('connect', function(){ setConn('mqtt-status','connected','已连接'); mqttLog('system','已连接 '+url); msg('ok','MQTT 已连接'); });
+  mqClient.on('message', function(topic, payload){ mqttLog('in', topic+' | '+payload.toString()); });
+  mqClient.on('error', function(e){ setConn('mqtt-status','disconnected','连接出错'); mqttLog('system','错误：'+(e&&e.message?e.message:e)); });
+  mqClient.on('close', function(){ setConn('mqtt-status','disconnected','已断开'); mqttLog('system','连接已关闭'); });
+}
+function mqttSubscribe(){
+  if(!mqClient || !mqClient.connected){msg('error','请先连接');return}
+  var topic=val('mqtt-topic').trim();
+  if(!topic){msg('error','请输入主题');return}
+  mqClient.subscribe(topic, {qos:0}, function(err){
+    if(err){msg('error','订阅失败：'+err.message)}
+    else{msg('ok','已订阅 '+topic); mqttLog('system','订阅 '+topic)}
+  });
+}
+function mqttPublish(){
+  if(!mqClient || !mqClient.connected){msg('error','请先连接');return}
+  var topic=val('mqtt-topic').trim();
+  var payload=val('mqtt-msg');
+  if(!topic){msg('error','请输入主题');return}
+  mqClient.publish(topic, payload, {qos:0}, function(err){
+    if(err){msg('error','发布失败：'+err.message)}
+    else{msg('ok','已发布'); mqttLog('out', topic+' | '+payload)}
+  });
+}
+function mqttDisconnect(){
+  if(mqClient){try{mqClient.end(true)}catch(e){}}
+  setConn('mqtt-status','disconnected','已断开'); mqttLog('system','手动断开');
+}
+function mqttClear(){ setVal('mqtt-log',''); msg('ok','日志已清空'); }
 
 /* ---- hash 路由 ---- */
 function initHash(){
