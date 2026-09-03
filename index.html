@@ -299,6 +299,12 @@ input[type=checkbox]{accent-color:var(--green);width:18px;height:18px}
 input[type=color]{width:100%;height:44px;background:var(--panel);border:3px solid #000;box-shadow:2px 2px 0 0 #000;cursor:pointer;padding:2px}
 select.btn{appearance:none;-webkit-appearance:none}
 
+.qr-canvas{
+  display:block;max-width:100%;height:auto;
+  border:3px solid #000;box-shadow:3px 3px 0 0 #000;
+  image-rendering:pixelated;background:#fff;
+}
+
 /* ============ 消息框 ============ */
 .msg-box{
   position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
@@ -371,6 +377,11 @@ select.btn{appearance:none;-webkit-appearance:none}
         <a class="nav-item" data-tool="hash" onclick="showView('hash')"><span class="ico">哈</span>哈希计算</a>
         <a class="nav-item" data-tool="re" onclick="showView('re')"><span class="ico">正</span>正则测试</a>
         <a class="nav-item" data-tool="color" onclick="showView('color')"><span class="ico">色</span>颜色转换</a>
+        <a class="nav-item" data-tool="qr" onclick="showView('qr')"><span class="ico">维</span>二维码生成</a>
+        <a class="nav-item" data-tool="jwt" onclick="showView('jwt')"><span class="ico">令</span>JWT 解析</a>
+        <a class="nav-item" data-tool="urlp" onclick="showView('urlp')"><span class="ico">址</span>URL 解析器</a>
+        <a class="nav-item" data-tool="hmac" onclick="showView('hmac')"><span class="ico">签</span>HMAC 计算</a>
+        <a class="nav-item" data-tool="base" onclick="showView('base')"><span class="ico">进</span>进制转换</a>
       </nav>
       <div class="side-foot">
         <div class="hearts">
@@ -445,6 +456,31 @@ select.btn{appearance:none;-webkit-appearance:none}
             <div class="c-ico">色</div>
             <div class="c-name">颜色转换</div>
             <div class="c-desc">HEX / RGB / HSL 互转</div>
+          </a>
+          <a class="card" onclick="showView('qr')">
+            <div class="c-ico">维</div>
+            <div class="c-name">二维码生成</div>
+            <div class="c-desc">文本 / 网址生成二维码</div>
+          </a>
+          <a class="card" onclick="showView('jwt')">
+            <div class="c-ico">令</div>
+            <div class="c-name">JWT 解析</div>
+            <div class="c-desc">解析 Header 与 Payload</div>
+          </a>
+          <a class="card" onclick="showView('urlp')">
+            <div class="c-ico">址</div>
+            <div class="c-name">URL 解析器</div>
+            <div class="c-desc">解析 URL 组成与查询参数</div>
+          </a>
+          <a class="card" onclick="showView('hmac')">
+            <div class="c-ico">签</div>
+            <div class="c-name">HMAC 计算</div>
+            <div class="c-desc">HMAC-MD5 / SHA1 / SHA256 / SHA512</div>
+          </a>
+          <a class="card" onclick="showView('base')">
+            <div class="c-ico">进</div>
+            <div class="c-name">进制转换</div>
+            <div class="c-desc">二进制 / 八进制 / 十进制 / 十六进制</div>
           </a>
         </div>
       </section>
@@ -756,6 +792,156 @@ select.btn{appearance:none;-webkit-appearance:none}
         </div>
       </section>
 
+      <!-- 二维码 -->
+      <section class="view view--tool" id="view-qr">
+        <div class="title-row"><div class="badge">QR</div><h2>二维码生成</h2></div>
+        <p class="tool-desc">输入文本生成二维码，可下载 PNG。容错级别越高越抗遮挡。</p>
+        <div class="toolbar">
+          <select class="btn" id="qr-ec">
+            <option value="L">容错 L (7%)</option>
+            <option value="M" selected>容错 M (15%)</option>
+            <option value="Q">容错 Q (25%)</option>
+            <option value="H">容错 H (30%)</option>
+          </select>
+          <button class="btn" onclick="genQR()">生成</button>
+          <button class="btn btn--gold" onclick="downloadQR()">下载 PNG</button>
+          <button class="btn btn--red" onclick="clearBoth('qr-text','qr-text')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">内容</span></div>
+            <textarea class="io" id="qr-text" spellcheck="false" placeholder="输入要生成二维码的内容（网址 / 文本）…"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">二维码</span></div>
+            <div style="display:flex;align-items:center;justify-content:center;flex:1;min-height:0;overflow:auto">
+              <canvas class="qr-canvas" id="qr-canvas" width="0" height="0"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- JWT -->
+      <section class="view view--tool" id="view-jwt">
+        <div class="title-row"><div class="badge">令</div><h2>JWT 解析</h2></div>
+        <p class="tool-desc">解析 JWT（不校验签名），查看 Header 与 Payload。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="decodeJWT()">解析</button>
+          <button class="btn btn--gold" onclick="copyText('jwt-payload')">复制载荷</button>
+          <button class="btn btn--red" onclick="clearBoth('jwt-in','jwt-payload')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">JWT 令牌</span></div>
+            <textarea class="io" id="jwt-in" spellcheck="false" placeholder="粘贴 JWT（xxx.yyy.zzz）…"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">解析结果</span></div>
+            <div class="re-status" id="jwt-info">尚未解析</div>
+            <textarea class="io io--out" id="jwt-payload" readonly spellcheck="false" placeholder="PAYLOAD 载荷…"></textarea>
+            <textarea class="io io--out io--sm" id="jwt-header" readonly spellcheck="false" placeholder="HEADER 头…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- URL 解析 -->
+      <section class="view view--tool" id="view-urlp">
+        <div class="title-row"><div class="badge">址</div><h2>URL 解析器</h2></div>
+        <p class="tool-desc">解析 URL 的各组成部分与查询参数。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="parseURL()">解析</button>
+          <button class="btn btn--gold" onclick="copyText('urlp-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('urlp-in','urlp-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">URL</span></div>
+            <textarea class="io" id="urlp-in" spellcheck="false" placeholder="https://example.com:8080/path?a=1&b=2#top"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">解析结果</span></div>
+            <textarea class="io io--out" id="urlp-out" readonly spellcheck="false" placeholder="解析结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- HMAC -->
+      <section class="view view--tool" id="view-hmac">
+        <div class="title-row"><div class="badge">签</div><h2>HMAC 计算</h2></div>
+        <p class="tool-desc">使用密钥计算消息的 HMAC 摘要。</p>
+        <div class="toolbar">
+          <select class="btn" id="hmac-algo">
+            <option value="MD5">HMAC-MD5</option>
+            <option value="SHA-1">HMAC-SHA1</option>
+            <option value="SHA-256" selected>HMAC-SHA256</option>
+            <option value="SHA-512">HMAC-SHA512</option>
+          </select>
+          <button class="btn" onclick="calcHMAC()">计算</button>
+          <button class="btn btn--gold" onclick="copyText('hmac-out')">复制结果</button>
+          <button class="btn btn--red" onclick="hmacClear()">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">消息 + 密钥</span></div>
+            <div class="field">
+              <label>密钥 Key</label>
+              <input class="io-input" id="hmac-key" placeholder="secret key">
+            </div>
+            <div class="field">
+              <label>消息</label>
+            </div>
+            <textarea class="io" id="hmac-msg" spellcheck="false" placeholder="要计算的消息内容…"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">摘要（只读）</span></div>
+            <textarea class="io io--out" id="hmac-out" readonly spellcheck="false" placeholder="HMAC 结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 进制 -->
+      <section class="view view--tool" id="view-base">
+        <div class="title-row"><div class="badge">进</div><h2>进制转换</h2></div>
+        <p class="tool-desc">二进制 / 八进制 / 十进制 / 十六进制互转。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="convBase()">转换</button>
+          <button class="btn btn--gold" onclick="copyText('base-out-dec')">复制十进制</button>
+          <button class="btn btn--red" onclick="baseClear()">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">数值</span></div>
+            <div class="field">
+              <label>数值</label>
+              <input class="io-input" id="base-in" value="255" placeholder="255">
+            </div>
+            <div class="field">
+              <label>当前进制</label>
+              <select class="io-input" id="base-from">
+                <option value="2">二进制</option>
+                <option value="8">八进制</option>
+                <option value="10" selected>十进制</option>
+                <option value="16">十六进制</option>
+              </select>
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果</span></div>
+            <div class="color-fields">
+              <div class="field"><label>十进制 DEC</label><input class="io-input" id="base-out-dec" readonly placeholder="-"></div>
+              <div class="field"><label>十六进制 HEX</label><input class="io-input" id="base-out-hex" readonly placeholder="-"></div>
+              <div class="field"><label>八进制 OCT</label><input class="io-input" id="base-out-oct" readonly placeholder="-"></div>
+              <div class="field"><label>二进制 BIN</label><input class="io-input" id="base-out-bin" readonly placeholder="-"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -763,6 +949,7 @@ select.btn{appearance:none;-webkit-appearance:none}
 
 <script async src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
 <script async src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script>
 function $(id){return document.getElementById(id)}
 
@@ -1136,6 +1323,132 @@ function colorClear(){
   setVal('color-in',''); setVal('color-hex',''); setVal('color-rgb',''); setVal('color-hsl','');
   document.getElementById('color-swatch').style.background='#000';
   msg('ok','已清空');
+}
+
+/* ---- 二维码 ---- */
+function genQR(){
+  var text=val('qr-text');
+  if(!text){msg('error','请输入要编码的内容');return}
+  if(typeof qrcode==='undefined'){msg('error','二维码库未加载，请刷新');return}
+  var ec=val('qr-ec');
+  var qr;
+  try{ qr=qrcode(0, ec); qr.addData(text); qr.make(); }
+  catch(e){ msg('error','生成失败：'+e.message); return; }
+  var count=qr.getModuleCount();
+  var cell=6, margin=4;
+  var canvas=document.getElementById('qr-canvas');
+  var size=(count+margin*2)*cell;
+  canvas.width=size; canvas.height=size;
+  var ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size);
+  ctx.fillStyle='#000';
+  for(var r=0;r<count;r++){
+    for(var c=0;c<count;c++){
+      if(qr.isDark(r,c)){ ctx.fillRect((c+margin)*cell,(r+margin)*cell,cell,cell); }
+    }
+  }
+  msg('ok','二维码已生成');
+}
+function downloadQR(){
+  var canvas=document.getElementById('qr-canvas');
+  if(!canvas.width){msg('error','请先生成二维码');return}
+  var a=document.createElement('a');
+  a.href=canvas.toDataURL('image/png');
+  a.download='qrcode.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  msg('ok','已开始下载 PNG');
+}
+
+/* ---- JWT ---- */
+function b64urlDecode(s){
+  s=s.replace(/-/g,'+').replace(/_/g,'/');
+  var pad=s.length%4;
+  if(pad)s+='===='.slice(0,4-pad);
+  var bin=atob(s);
+  var bytes=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function decodeJWT(){
+  var token=val('jwt-in').trim();
+  if(!token){msg('error','请输入 JWT');return}
+  var parts=token.split('.');
+  if(parts.length!==3){msg('error','JWT 应为三段 header.payload.signature');return}
+  try{
+    var header=JSON.parse(b64urlDecode(parts[0]));
+    var payload=JSON.parse(b64urlDecode(parts[1]));
+    setVal('jwt-header', JSON.stringify(header,null,2));
+    setVal('jwt-payload', JSON.stringify(payload,null,2));
+    var info='';
+    if(payload.exp){
+      var d=new Date(payload.exp*1000);
+      info='exp 过期时间: '+fmtDate(d)+' —— '+(d.getTime()<Date.now()?'已过期':'未过期');
+    } else if(payload.iat){
+      info='iat 签发时间: '+fmtDate(new Date(payload.iat*1000));
+    } else {
+      info='无 exp / iat 字段';
+    }
+    document.getElementById('jwt-info').textContent=info;
+    msg('ok','JWT 解析完成');
+  }catch(e){msg('error','解析失败：'+e.message)}
+}
+
+/* ---- URL 解析 ---- */
+function parseURL(){
+  var src=val('urlp-in').trim();
+  if(!src){msg('error','请输入 URL');return}
+  try{
+    var u=new URL(src);
+    var lines=[];
+    lines.push('protocol : '+u.protocol);
+    lines.push('host     : '+u.host);
+    lines.push('hostname : '+u.hostname);
+    lines.push('port     : '+(u.port||'(默认)'));
+    lines.push('pathname : '+u.pathname);
+    lines.push('search   : '+u.search);
+    lines.push('hash     : '+u.hash);
+    lines.push('');
+    lines.push('--- 查询参数 query ---');
+    var has=false;
+    u.searchParams.forEach(function(v,k){ lines.push(k+' = '+v); has=true; });
+    if(!has)lines.push('(无查询参数)');
+    setVal('urlp-out', lines.join('\n'));
+    msg('ok','URL 解析完成');
+  }catch(e){msg('error','URL 无效：'+e.message)}
+}
+
+/* ---- HMAC ---- */
+function calcHMAC(){
+  if(typeof CryptoJS==='undefined'){msg('error','库未加载，请刷新');return}
+  var m=val('hmac-msg'), k=val('hmac-key'), algo=val('hmac-algo');
+  if(m===''){msg('error','请输入消息');return}
+  var out='';
+  try{
+    if(algo==='MD5')out=CryptoJS.HmacMD5(m,k).toString();
+    else if(algo==='SHA-1')out=CryptoJS.HmacSHA1(m,k).toString();
+    else if(algo==='SHA-256')out=CryptoJS.HmacSHA256(m,k).toString();
+    else out=CryptoJS.HmacSHA512(m,k).toString();
+    setVal('hmac-out',out);
+    msg('ok','HMAC-'+algo+' 完成');
+  }catch(e){msg('error','计算失败：'+e.message)}
+}
+function hmacClear(){ setVal('hmac-msg',''); setVal('hmac-key',''); setVal('hmac-out',''); msg('ok','已清空'); }
+
+/* ---- 进制 ---- */
+function convBase(){
+  var src=val('base-in').trim();
+  var from=parseInt(val('base-from'),10);
+  var n=parseInt(src, from);
+  if(src===''||isNaN(n)){msg('error','无法按所选进制解析输入');return}
+  setVal('base-out-dec', String(n));
+  setVal('base-out-hex','0x'+n.toString(16).toUpperCase());
+  setVal('base-out-oct','0o'+n.toString(8));
+  setVal('base-out-bin','0b'+n.toString(2));
+  msg('ok','转换完成');
+}
+function baseClear(){
+  setVal('base-in',''); setVal('base-out-dec',''); setVal('base-out-hex','');
+  setVal('base-out-oct',''); setVal('base-out-bin',''); msg('ok','已清空');
 }
 
 /* ---- hash 路由 ---- */
