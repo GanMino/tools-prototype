@@ -385,13 +385,13 @@ select.btn{appearance:none;-webkit-appearance:none}
         <a class="nav-item active" data-tool="home"><span class="ico">首</span>首页</a>
         <!-- 分类菜单由 JS 渲染 -->
       </nav>
-      <div class="side-foot">
+      <div class="side-foot" title="今日使用工具的次数（每天自动清零）">
         <div class="hearts">
-          <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#E4000F"/></svg>
-          <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#E4000F"/></svg>
-          <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#E4000F"/></svg>
+          <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#444444"/></svg>
+          <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#444444"/></svg>
+          <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#444444"/></svg>
         </div>
-        <span style="font-size:11px;color:#8a7a5a">生命值 3/3</span>
+        <span id="usage-label" style="font-size:11px;color:#8a7a5a">今日使用 0 次</span>
       </div>
     </aside>
 
@@ -1051,6 +1051,7 @@ function showView(id){
   var items=document.querySelectorAll('.nav-item');
   for(var j=0;j<items.length;j++){items[j].classList.toggle('active',items[j].getAttribute('data-tool')===id)}
   closeSidebar();
+  if(id!=='home'){ addUsage(); }
 }
 
 /* ---- 消息框 ---- */
@@ -1647,6 +1648,33 @@ function genPwd(){
   msg('ok','已生成 '+len+' 位密码');
 }
 
+/* ---- 今日使用统计（生命心） ---- */
+function todayKey(){
+  var d=new Date();
+  return 'zelda-usage-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function getUsage(){
+  try{
+    var n=parseInt(localStorage.getItem(todayKey())||'0',10);
+    return isNaN(n)?0:n;
+  }catch(e){ return 0; }
+}
+function addUsage(){
+  var n=getUsage()+1;
+  try{ localStorage.setItem(todayKey(), String(n)); }catch(e){}
+  updateUsageUI();
+}
+function updateUsageUI(){
+  var n=getUsage();
+  var label=document.getElementById('usage-label');
+  if(label)label.textContent='今日使用 '+n+' 次';
+  var hearts=document.querySelectorAll('.side-foot .h');
+  for(var i=0;i<hearts.length;i++){
+    var filled = i < Math.min(n, hearts.length);
+    hearts[i].querySelector('path').setAttribute('fill', filled ? '#E4000F' : '#444444');
+  }
+}
+
 /* ---- hash 路由 ---- */
 function initHash(){
   var h=location.hash.replace('#','');
@@ -1654,6 +1682,7 @@ function initHash(){
 }
 window.addEventListener('hashchange',initHash);
 renderMenu();
+updateUsageUI();
 initHash();
 </script>
 </body>
