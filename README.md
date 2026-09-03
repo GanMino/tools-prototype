@@ -12,6 +12,10 @@
 | 时间戳转换 | Unix 时间戳（秒）与日期时间互转 |
 | WebSocket | WebSocket 连接与消息收发调试 |
 | MQTT | MQTT 订阅 / 发布调试（WebSocket 连接） |
+| UUID 生成 | 批量生成 UUID v4 |
+| 哈希计算 | MD5 / SHA-1 / SHA-256 / SHA-512 |
+| 正则测试 | 正则匹配与高亮测试 |
+| 颜色转换 | HEX / RGB / HSL 互转 |
 
 ## 特点
 
