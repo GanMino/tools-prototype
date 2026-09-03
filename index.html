@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>工具集 · 8-BIT TOOLBOX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* ============ 字体 ============ */
+@font-face{
+  font-family:"Fusion Pixel";
+  src:url("fonts/fusion-pixel-12px-monospaced-latin.otf.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap;
+  unicode-range:U+0000-00FF;
+}
+@font-face{
+  font-family:"Fusion Pixel";
+  src:url("fonts/fusion-pixel-12px-monospaced-zh_hans.otf.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap;
+  unicode-range:U+2000-2E7F,U+3000-9FFF,U+FF00-FFEF;
+}
+
+/* ============ 变量 ============ */
+:root{
+  --gold:#F8B800;
+  --gold-light:#F8D878;
+  --orange:#FC9838;
+  --green:#007C00;
+  --green-bright:#00A800;
+  --green-neon:#B8F818;
+  --brown:#8B5A2B;
+  --brown-dark:#603810;
+  --tan:#F0D0A0;
+  --blue:#0038A8;
+  --blue-light:#3CBCFC;
+  --red:#E4000F;
+  --ink:#0A0A0A;
+  --panel:#141210;
+  --font-title:"Press Start 2P","Fusion Pixel",monospace;
+  --font-body:"Fusion Pixel","Press Start 2P",monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font-body);
+  font-size:14px;line-height:1.7;
+  color:var(--tan);
+  background-color:#12100d;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Crect width='16' height='16' fill='%2312100d'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%23161410'/%3E%3Crect x='0' y='8' width='4' height='4' fill='%23181511'/%3E%3Crect x='12' y='0' width='4' height='4' fill='%23181511'/%3E%3C/svg%3E");
+  background-size:16px 16px;
+  image-rendering:pixelated;
+  -webkit-font-smoothing:none;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+
+/* ============ 顶栏（移动端） ============ */
+.topbar{
+  display:none;
+  position:relative;z-index:35;flex-shrink:0;
+  background:var(--panel);border-bottom:4px solid #000;
+  box-shadow:0 4px 0 0 #000;
+  align-items:center;gap:12px;padding:12px 14px;
+}
+.topbar .burger{
+  width:44px;height:44px;display:grid;place-items:center;
+  background:var(--green);color:var(--gold-light);
+  border:3px solid #000;box-shadow:3px 3px 0 0 #000;
+  cursor:pointer;font-size:18px;
+}
+.topbar .t-title{font-family:var(--font-title);font-size:15px;color:var(--gold);text-shadow:2px 2px 0 #000}
+
+/* ============ 布局 ============ */
+.layout{display:flex;flex:1;min-height:0;overflow:hidden}
+
+.sidebar{
+  width:250px;flex:0 0 250px;
+  background:var(--panel);border-right:4px solid #000;
+  box-shadow:4px 0 0 0 #000;
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+}
+.brand{padding:22px 18px 16px;border-bottom:4px solid #000;text-align:center}
+.brand .tri{width:42px;height:42px;margin:0 auto 10px;display:block}
+.brand h1{
+  font-family:var(--font-title);font-size:20px;line-height:1.4;
+  color:var(--gold);
+  text-shadow:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000,
+    2px 2px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000;
+}
+.brand .sub{font-size:10px;color:var(--gold-light);letter-spacing:1px;margin-top:6px}
+
+.nav{padding:14px 12px;display:flex;flex-direction:column;gap:8px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;color:var(--tan);text-decoration:none;
+  border:3px solid #000;background:#0d0c0a;
+  box-shadow:3px 3px 0 0 #000;cursor:pointer;font-size:14px;
+}
+.nav-item .ico{
+  width:30px;height:30px;flex:0 0 30px;
+  display:grid;place-items:center;
+  background:var(--green);color:var(--gold-light);
+  border:2px solid #000;font-family:var(--font-title);font-size:11px;
+}
+.nav-item:hover{background:#1c1814}
+.nav-item.active{background:var(--gold);color:#000;box-shadow:3px 3px 0 0 #000}
+.nav-item.active .ico{background:var(--brown-dark);color:var(--gold-light)}
+
+.side-foot{padding:14px 18px;border-top:4px solid #000;margin-top:auto;display:flex;align-items:center;gap:8px}
+.side-foot .hearts{display:flex;gap:3px}
+.side-foot .h{width:14px;height:14px}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:30}
+
+/* ============ 主区 ============ */
+.main{
+  flex:1;min-width:0;min-height:0;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.view{display:none}
+.view.active{display:flex;flex-direction:column;flex:1;min-height:0}
+
+/* 首页：可内部滚动 */
+#view-home{overflow-y:auto;padding:26px 30px 40px}
+
+/* 工具页：全高，内部不滚动 */
+.view--tool{padding:18px 30px 16px;overflow:hidden}
+
+.title-row{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+.title-row .badge{
+  width:36px;height:36px;display:grid;place-items:center;
+  background:var(--gold);color:#000;
+  border:3px solid #000;box-shadow:3px 3px 0 0 #000;
+  font-family:var(--font-title);font-size:13px;
+}
+h2{font-family:var(--font-title);font-size:18px;color:var(--gold);text-shadow:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000}
+.tool-desc{color:#c8b088;font-size:13px;margin:2px 0 12px}
+
+/* ============ 首页 ============ */
+.hero{margin-bottom:26px}
+.hero .dialog{
+  position:relative;background:#001028;color:#fff;
+  border:3px solid #fff;
+  box-shadow:0 0 0 3px #000,0 0 0 6px #fff;
+  padding:18px 20px;font-size:14px;
+}
+.hero .dialog .d-title{color:var(--gold);font-family:var(--font-title);font-size:13px;margin-bottom:8px}
+.hero .dialog .cursor{
+  display:inline-block;width:0;height:0;vertical-align:middle;margin-left:6px;
+  border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid #fff;
+  animation:blink 1s steps(1) infinite;
+}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.card{
+  display:block;text-decoration:none;
+  background:var(--panel);border:3px solid #000;
+  box-shadow:5px 5px 0 0 #000;padding:18px 16px;cursor:pointer;
+}
+.card .c-ico{
+  width:44px;height:44px;display:grid;place-items:center;
+  background:var(--green);color:var(--gold-light);
+  border:3px solid #000;box-shadow:3px 3px 0 0 #000;
+  font-family:var(--font-title);font-size:14px;margin-bottom:12px;
+}
+.card .c-name{font-family:var(--font-title);font-size:14px;color:var(--gold);margin-bottom:8px}
+.card .c-desc{color:#c8b088;font-size:13px}
+.card:hover{background:#1c1814}
+.card:hover .c-ico{background:var(--gold);color:#000}
+
+/* ============ 按钮 ============ */
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0 14px}
+.btn{
+  font-family:var(--font-body);font-size:14px;padding:10px 16px;
+  color:#fff;background:var(--green);
+  border:3px solid #000;box-shadow:4px 4px 0 0 #000;cursor:pointer;
+}
+.btn:hover{background:var(--green-bright)}
+.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 0 #000}
+.btn--gold{background:#7a5c14;color:var(--gold-light)}
+.btn--gold:hover{background:#8a6d1f}
+.btn--blue{background:var(--blue)}
+.btn--blue:hover{background:#0048c8}
+.btn--red{background:#7a0a0f}
+.btn--red:hover{background:#8a1010}
+
+/* ============ 输入 / 展示 双栏（全高自适应） ============ */
+.split{
+  flex:1;min-height:0;
+  display:grid;grid-template-columns:1fr 44px 1fr;gap:12px;
+  align-items:stretch;
+}
+.split-arrow{display:flex;align-items:center;justify-content:center}
+.arrow{
+  width:0;height:0;
+  border-top:11px solid transparent;border-bottom:11px solid transparent;
+  border-left:18px solid var(--gold);
+}
+.pane{
+  display:flex;flex-direction:column;min-height:0;
+  background:var(--panel);border:3px solid #000;
+  box-shadow:5px 5px 0 0 #000;padding:12px;
+}
+.pane-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #000;
+  font-family:var(--font-title);font-size:11px;color:var(--tan);
+  flex-shrink:0;
+}
+.pane-head .tag{
+  padding:4px 8px;border:2px solid #000;box-shadow:2px 2px 0 0 #000;
+  font-size:10px;letter-spacing:1px;
+}
+.pane--in .tag{background:var(--blue);color:#fff}
+.pane--out .tag{background:var(--green);color:var(--gold-light)}
+.pane-head .hint{font-family:var(--font-body);font-size:11px;color:#8a7a5a}
+
+.io{
+  flex:1;min-height:0;
+  width:100%;
+  background:#0d0d0d;color:var(--green-neon);
+  border:3px solid #000;box-shadow:inset 0 0 0 2px #3a3a2a;
+  font-family:var(--font-body);font-size:14px;line-height:1.7;
+  padding:12px;resize:none;outline:none;display:block;
+}
+.io:focus{border-color:var(--gold)}
+.io--out{background:#0a0a08;color:var(--gold-light)}
+.io::-webkit-scrollbar{width:12px}
+.io::-webkit-scrollbar-thumb{background:var(--brown);border:2px solid #000}
+.io::-webkit-scrollbar-track{background:#0d0d0d}
+
+/* 时间戳字段 */
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:12px;color:var(--gold-light);margin-bottom:6px}
+.io-input{
+  width:100%;background:#0d0d0d;color:var(--green-neon);
+  border:3px solid #000;box-shadow:inset 0 0 0 2px #3a3a2a;
+  font-family:var(--font-body);font-size:14px;padding:9px 10px;outline:none;
+}
+.io-input:focus{border-color:var(--gold)}
+
+/* ============ 消息框 ============ */
+.msg-box{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  background:#001028;color:#fff;border:3px solid #fff;
+  box-shadow:0 0 0 3px #000,0 0 0 6px #fff;
+  padding:12px 18px;font-size:14px;max-width:min(92vw,560px);
+  z-index:60;opacity:0;pointer-events:none;
+  transition:opacity .12s steps(2);
+  display:flex;align-items:center;gap:8px;
+}
+.msg-box.show{opacity:1;pointer-events:auto}
+.msg-box .m-cur{
+  width:0;height:0;
+  border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #fff;
+  animation:blink 1s steps(1) infinite;
+}
+.msg-box.msg-error{border-color:var(--red);box-shadow:0 0 0 3px #000,0 0 0 6px var(--red)}
+.msg-box.msg-ok{border-color:var(--green-neon);box-shadow:0 0 0 3px #000,0 0 0 6px var(--green-neon)}
+
+/* ============ 响应式 ============ */
+@media (max-width:860px){
+  .topbar{display:flex}
+  .sidebar{
+    position:fixed;left:0;top:0;bottom:0;z-index:40;
+    transform:translateX(-105%);transition:transform .15s steps(3);
+    box-shadow:none;
+  }
+  .sidebar.open{transform:translateX(0);box-shadow:4px 0 0 0 #000}
+  .overlay.show{display:block}
+  #view-home{padding:20px 14px 40px}
+  .view--tool{padding:14px 14px 12px}
+  h2{font-size:15px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .btn{padding:10px 12px;font-size:13px}
+  .split{grid-template-columns:1fr;grid-template-rows:1fr auto 1fr;gap:10px}
+  .split-arrow .arrow{transform:rotate(90deg)}
+  .toolbar{gap:10px;margin:8px 0 12px}
+}
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="burger" onclick="toggleSidebar()">☰</div>
+    <span class="t-title">工具集 8-BIT</span>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <svg class="tri" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
+          <path d="M8 1 L15 14 L1 14 Z" fill="#F8B800"/>
+          <path d="M8 6 L12 14 L4 14 Z" fill="#000000"/>
+          <path d="M5 9 L7 13 L3 13 Z" fill="#F8B800"/>
+          <path d="M11 9 L13 13 L9 13 Z" fill="#F8B800"/>
+        </svg>
+        <h1>工具集</h1>
+        <div class="sub">8-BIT TOOLBOX</div>
+      </div>
+      <nav class="nav">
+        <a class="nav-item active" data-tool="home" onclick="showView('home')"><span class="ico">首</span>首页</a>
+        <a class="nav-item" data-tool="json" onclick="showView('json')"><span class="ico">{}</span>JSON 格式化</a>
+        <a class="nav-item" data-tool="url" onclick="showView('url')"><span class="ico">%</span>URL 编解码</a>
+        <a class="nav-item" data-tool="b64" onclick="showView('b64')"><span class="ico">64</span>Base64 编解码</a>
+        <a class="nav-item" data-tool="ts" onclick="showView('ts')"><span class="ico">时</span>时间戳转换</a>
+      </nav>
+      <div class="side-foot">
+        <div class="hearts">
+          <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#E4000F"/></svg>
+          <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#E4000F"/></svg>
+          <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#E4000F"/></svg>
+        </div>
+        <span style="font-size:11px;color:#8a7a5a">生命值 3/3</span>
+      </div>
+    </aside>
+
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <main class="main">
+
+      <!-- 首页 -->
+      <section class="view active" id="view-home">
+        <div class="hero">
+          <div class="dialog">
+            <div class="d-title">- 冒险开始 -</div>
+            欢迎来到 8-BIT 工具集。这里收集了开发者常用的免费在线工具，数据全程在本地浏览器处理，不会上传服务器。
+            <span class="cursor"></span>
+          </div>
+        </div>
+        <div class="grid">
+          <a class="card" onclick="showView('json')">
+            <div class="c-ico">{}</div>
+            <div class="c-name">JSON 格式化</div>
+            <div class="c-desc">格式化 / 压缩 / 校验 JSON</div>
+          </a>
+          <a class="card" onclick="showView('url')">
+            <div class="c-ico">%</div>
+            <div class="c-name">URL 编解码</div>
+            <div class="c-desc">URL 编码与解码</div>
+          </a>
+          <a class="card" onclick="showView('b64')">
+            <div class="c-ico">64</div>
+            <div class="c-name">Base64 编解码</div>
+            <div class="c-desc">Base64 编码与解码（支持中文）</div>
+          </a>
+          <a class="card" onclick="showView('ts')">
+            <div class="c-ico">时</div>
+            <div class="c-name">时间戳转换</div>
+            <div class="c-desc">Unix 时间戳 ↔ 日期时间</div>
+          </a>
+        </div>
+      </section>
+
+      <!-- JSON -->
+      <section class="view view--tool" id="view-json">
+        <div class="title-row"><div class="badge">{}</div><h2>JSON 格式化</h2></div>
+        <p class="tool-desc">在输入区粘贴 JSON，点击按钮后结果展示在右侧（手机端在下方）。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="fmtJSON()">格式化</button>
+          <button class="btn" onclick="minJSON()">压缩</button>
+          <button class="btn btn--blue" onclick="validateJSON()">校验</button>
+          <button class="btn btn--gold" onclick="copyText('json-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('json-in','json-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">粘贴 JSON</span></div>
+            <textarea class="io" id="json-in" spellcheck="false" placeholder='{"name":"林克","hp":3,"items":["剑","盾"]}'></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果（只读）</span></div>
+            <textarea class="io io--out" id="json-out" readonly spellcheck="false" placeholder="结果将显示在这里…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- URL -->
+      <section class="view view--tool" id="view-url">
+        <div class="title-row"><div class="badge">%</div><h2>URL 编解码</h2></div>
+        <p class="tool-desc">输入区粘贴文本，编码 / 解码结果展示在右侧。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="urlEncode()">编码</button>
+          <button class="btn" onclick="urlDecode()">解码</button>
+          <button class="btn btn--gold" onclick="copyText('url-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('url-in','url-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">原始文本</span></div>
+            <textarea class="io" id="url-in" spellcheck="false" placeholder="https://example.com/?q=塞尔达 传说"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果（只读）</span></div>
+            <textarea class="io io--out" id="url-out" readonly spellcheck="false" placeholder="结果将显示在这里…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Base64 -->
+      <section class="view view--tool" id="view-b64">
+        <div class="title-row"><div class="badge">64</div><h2>Base64 编解码</h2></div>
+        <p class="tool-desc">输入区粘贴文本，编码 / 解码结果展示在右侧（支持中文 UTF-8）。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="b64Encode()">编码</button>
+          <button class="btn" onclick="b64Decode()">解码</button>
+          <button class="btn btn--gold" onclick="copyText('b64-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('b64-in','b64-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">原始文本</span></div>
+            <textarea class="io" id="b64-in" spellcheck="false" placeholder="Hello, 塞尔达传说！"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果（只读）</span></div>
+            <textarea class="io io--out" id="b64-out" readonly spellcheck="false" placeholder="结果将显示在这里…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 时间戳 -->
+      <section class="view view--tool" id="view-ts">
+        <div class="title-row"><div class="badge">时</div><h2>时间戳转换</h2></div>
+        <p class="tool-desc">Unix 时间戳（秒）与日期时间互转，转换结果展示在右侧。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="secToDate()">秒 → 时间</button>
+          <button class="btn" onclick="dateToSec()">时间 → 秒</button>
+          <button class="btn btn--gold" onclick="tsNow()">当前时间</button>
+          <button class="btn btn--blue" onclick="copyText('ts-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('ts-sec','ts-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">填写其一</span></div>
+            <div class="field">
+              <label>Unix 秒（时间戳）</label>
+              <input class="io-input" id="ts-sec" placeholder="1700000000" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label>日期时间</label>
+              <input class="io-input" id="ts-date" placeholder="2023-11-14 22:13:20">
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果（只读）</span></div>
+            <textarea class="io io--out" id="ts-out" readonly spellcheck="false" placeholder="转换结果将显示在这里…"></textarea>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="msg-box" id="msg-box"><span class="m-cur"></span><span class="msg-text"></span></div>
+
+<script>
+function $(id){return document.getElementById(id)}
+
+/* ---- 侧边栏 ---- */
+function toggleSidebar(){
+  var s=$('sidebar');var o=$('overlay');
+  if(s.classList.contains('open')){closeSidebar()}else{s.classList.add('open');o.classList.add('show')}
+}
+function closeSidebar(){$('sidebar').classList.remove('open');$('overlay').classList.remove('show')}
+
+/* ---- 视图切换 ---- */
+function showView(id){
+  var views=document.querySelectorAll('.view');
+  for(var i=0;i<views.length;i++){views[i].classList.remove('active')}
+  var el=$('view-'+id);
+  if(el){el.classList.add('active')}
+  var items=document.querySelectorAll('.nav-item');
+  for(var j=0;j<items.length;j++){items[j].classList.toggle('active',items[j].getAttribute('data-tool')===id)}
+  closeSidebar();
+}
+
+/* ---- 消息框 ---- */
+var msgTimer=null;
+function msg(type,text){
+  var box=$('msg-box');
+  box.className='msg-box show msg-'+type;
+  box.querySelector('.msg-text').textContent=text;
+  if(msgTimer){clearTimeout(msgTimer)}
+  msgTimer=setTimeout(function(){box.classList.remove('show')},4000);
+}
+
+/* ---- 工具函数 ---- */
+function val(id){return $(id).value}
+function setVal(id,v){$(id).value=v}
+function clearBoth(inId,outId){setVal(inId,'');setVal(outId,'');msg('ok','已清空')}
+function copyText(id){
+  var t=val(id);
+  if(!t){msg('error','输出为空，请先执行转换');return}
+  function fb(){
+    var ta=document.createElement('textarea');
+    ta.value=t;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');msg('ok','已复制到剪贴板')}catch(e){msg('error','复制失败')}
+    document.body.removeChild(ta);
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){msg('ok','已复制到剪贴板')},fb);
+  }else{fb()}
+}
+
+/* ---- JSON ---- */
+function fmtJSON(){
+  var src=val('json-in');
+  if(!src.trim()){msg('error','请先在输入区粘贴 JSON');return}
+  try{setVal('json-out',JSON.stringify(JSON.parse(src),null,2));msg('ok','格式化完成！')}
+  catch(e){msg('error','JSON 解析失败：'+e.message)}
+}
+function minJSON(){
+  var src=val('json-in');
+  if(!src.trim()){msg('error','请先在输入区粘贴 JSON');return}
+  try{setVal('json-out',JSON.stringify(JSON.parse(src)));msg('ok','压缩完成！')}
+  catch(e){msg('error','JSON 解析失败：'+e.message)}
+}
+function validateJSON(){
+  var src=val('json-in');
+  if(!src.trim()){msg('error','请先在输入区粘贴 JSON');return}
+  try{JSON.parse(src);msg('ok','✔ JSON 格式正确')}
+  catch(e){msg('error','JSON 格式错误：'+e.message)}
+}
+
+/* ---- URL ---- */
+function urlEncode(){
+  var src=val('url-in');
+  if(!src){msg('error','请先在输入区粘贴文本');return}
+  try{setVal('url-out',encodeURIComponent(src));msg('ok','URL 编码完成')}
+  catch(e){msg('error','编码失败：'+e.message)}
+}
+function urlDecode(){
+  var src=val('url-in');
+  if(!src){msg('error','请先在输入区粘贴文本');return}
+  try{setVal('url-out',decodeURIComponent(src));msg('ok','URL 解码完成')}
+  catch(e){msg('error','解码失败：'+e.message)}
+}
+
+/* ---- Base64 ---- */
+function b64Encode(){
+  var src=val('b64-in');
+  if(!src){msg('error','请先在输入区粘贴文本');return}
+  try{
+    var bytes=new TextEncoder().encode(src);
+    var bin='';
+    for(var i=0;i<bytes.length;i++){bin+=String.fromCharCode(bytes[i])}
+    setVal('b64-out',btoa(bin));
+    msg('ok','Base64 编码完成')
+  }catch(e){msg('error','编码失败：'+e.message)}
+}
+function b64Decode(){
+  var src=val('b64-in').trim();
+  if(!src){msg('error','请先在输入区粘贴文本');return}
+  try{
+    var bin=atob(src);
+    var bytes=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++){bytes[i]=bin.charCodeAt(i)}
+    setVal('b64-out',new TextDecoder().decode(bytes));
+    msg('ok','Base64 解码完成')
+  }catch(e){msg('error','解码失败：'+e.message)}
+}
+
+/* ---- 时间戳 ---- */
+function pad(n){return (n<10?'0':'')+n}
+function fmtDate(d){
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())
+}
+function secToDate(){
+  var sec=parseInt(val('ts-sec'),10);
+  if(isNaN(sec)){msg('error','请输入有效的秒数');return}
+  setVal('ts-out',fmtDate(new Date(sec*1000)));
+  msg('ok','已转换为时间')
+}
+function dateToSec(){
+  var s=val('ts-date').trim().replace(/-/g,'/');
+  var t=new Date(s).getTime();
+  if(isNaN(t)){msg('error','日期格式无效，请用 YYYY-MM-DD HH:mm:ss');return}
+  setVal('ts-out',String(Math.floor(t/1000))+' 秒');
+  msg('ok','已转换为秒')
+}
+function tsNow(){
+  var sec=Math.floor(Date.now()/1000);
+  setVal('ts-sec',String(sec));
+  setVal('ts-date',fmtDate(new Date(sec*1000)));
+  setVal('ts-out',String(sec)+' 秒');
+  msg('ok','已填入当前时间')
+}
+
+/* ---- hash 路由 ---- */
+function initHash(){
+  var h=location.hash.replace('#','');
+  if(h&&document.getElementById('view-'+h)){showView(h)}
+}
+window.addEventListener('hashchange',initHash);
+initHash();
+</script>
+</body>
+</html>
