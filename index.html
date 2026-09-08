@@ -1024,6 +1024,49 @@ select.btn{appearance:none;-webkit-appearance:none}
         </div>
       </section>
 
+      <!-- Cron 调试 -->
+      <section class="view view--tool" id="view-cron">
+        <div class="title-row"><div class="badge">钟</div><h2>Cron 调试</h2></div>
+        <p class="tool-desc">解析 Linux（5 段）与 Spring（6 段）定时表达式，查看含义与下次执行时间。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="debugCron()">解析</button>
+          <button class="btn btn--blue" onclick="cronSample()">示例</button>
+          <button class="btn btn--gold" onclick="copyText('cron-next')">复制结果</button>
+          <button class="btn btn--red" onclick="cronClear()">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">表达式</span></div>
+            <div class="field">
+              <label>格式</label>
+              <select class="io-input" id="cron-fmt" onchange="cronFmtChange()">
+                <option value="linux" selected>Linux cron（5 段）</option>
+                <option value="spring">Spring cron（6 段）</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>cron 表达式</label>
+              <input class="io-input" id="cron-in" value="0 12 * * *" placeholder="0 12 * * *">
+            </div>
+            <div class="field">
+              <label>计算下次次数</label>
+              <input class="io-input" id="cron-count" value="5" inputmode="numeric">
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">说明 + 下次执行</span></div>
+            <div class="re-status" id="cron-status">尚未解析</div>
+            <div class="field">
+              <label>说明</label>
+              <input class="io-input" id="cron-desc" readonly placeholder="表达式含义…">
+            </div>
+            <label style="font-size:12px;color:var(--gold-light);margin-bottom:6px;flex-shrink:0">下次执行时间</label>
+            <textarea class="io io--out" id="cron-next" readonly spellcheck="false" placeholder="下次执行时间…"></textarea>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -1032,6 +1075,7 @@ select.btn{appearance:none;-webkit-appearance:none}
 <script async src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
 <script async src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
 <script async src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/cronstrue@2.50.0/dist/cronstrue-i18n.min.js"></script>
 <script>
 function $(id){return document.getElementById(id)}
 
@@ -1552,8 +1596,9 @@ var TOOLS = [
   {cat:'生成器',     id:'uuid',  name:'UUID 生成', icon:'码', desc:'批量生成 UUID v4'},
   {cat:'生成器',     id:'qr',    name:'二维码生成', icon:'维', desc:'文本 / 网址生成二维码'},
   {cat:'生成器',     id:'pwd',   name:'随机密码', icon:'密', desc:'生成强随机密码'},
-  {cat:'网络调试',   id:'ws',    name:'WebSocket', icon:'连', desc:'WebSocket 连接与消息调试'},
-  {cat:'网络调试',   id:'mqtt',  name:'MQTT', icon:'讯', desc:'MQTT 订阅 / 发布调试'}
+  {cat:'调试工具',   id:'ws',    name:'WebSocket', icon:'连', desc:'WebSocket 连接与消息调试'},
+  {cat:'调试工具',   id:'mqtt',  name:'MQTT', icon:'讯', desc:'MQTT 订阅 / 发布调试'},
+  {cat:'调试工具',   id:'cron',  name:'Cron 调试', icon:'钟', desc:'Linux / Spring 定时表达式解析'}
 ];
 
 function renderMenu(){
@@ -1673,6 +1718,167 @@ function updateUsageUI(){
     var filled = i < Math.min(n, hearts.length);
     hearts[i].querySelector('path').setAttribute('fill', filled ? '#E4000F' : '#444444');
   }
+}
+
+/* ---- Cron 调试 ---- */
+var MONTH_NAMES={JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+var DOW_NAMES={SUN:0,MON:1,TUE:2,WED:3,THU:4,FRI:5,SAT:6};
+
+function cronStripNames(s){
+  var up=s.toUpperCase();
+  var all=Object.keys(MONTH_NAMES).concat(Object.keys(DOW_NAMES));
+  all.forEach(function(n){ up=up.split(n).join(''); });
+  return up;
+}
+function cronParseField(field, min, max, names){
+  field=(field||'').trim();
+  if(field==='*'||field==='?'||field==='') return null;
+  if(/[A-Za-z]/.test(cronStripNames(field))) return 'unsupported';
+  var set={};
+  var parts=field.split(',');
+  for(var i=0;i<parts.length;i++){
+    var p=parts[i].trim();
+    if(p==='') return 'invalid';
+    var step=1, base=p, hasStep=false;
+    if(p.indexOf('/')>=0){
+      var sp=p.split('/');
+      if(sp.length!==2) return 'invalid';
+      base=sp[0]; step=parseInt(sp[1],10);
+      if(isNaN(step)||step<=0) return 'invalid';
+      hasStep=true;
+    }
+    function resolve(tok){
+      tok=tok.trim().toUpperCase();
+      if(names&&names[tok]!==undefined) return names[tok];
+      var n=parseInt(tok,10);
+      return isNaN(n)?null:n;
+    }
+    var lo, hi;
+    if(base==='*'){ lo=min; hi=max; }
+    else if(base.indexOf('-')>=0){
+      var r=base.split('-');
+      if(r.length!==2) return 'invalid';
+      lo=resolve(r[0]); hi=resolve(r[1]);
+    } else { lo=resolve(base); hi = hasStep ? max : lo; }
+    if(lo===null||hi===null||lo<min||hi>max||lo>hi) return 'invalid';
+    for(var v=lo;v<=hi;v+=step) set[v]=true;
+  }
+  return set;
+}
+function cronFieldMatches(set, value){
+  if(set===null) return true;
+  if(value===0 && set[7]) return true;
+  return !!set[value];
+}
+function cronDayMatches(domSet, monSet, dowSet, d){
+  if(!cronFieldMatches(monSet, d.getMonth()+1)) return false;
+  var domR = domSet!==null, dowR = dowSet!==null;
+  var domM = cronFieldMatches(domSet, d.getDate());
+  var dowM = cronFieldMatches(dowSet, d.getDay());
+  if(domR && dowR) return domM || dowM;
+  if(domR) return domM;
+  if(dowR) return dowM;
+  return true;
+}
+function cronComputeRuns(parsed, isSpring, count){
+  var runs=[];
+  var idx=isSpring?1:0;
+  var minSet=parsed[idx], hrSet=parsed[idx+1], domSet=parsed[idx+2], monSet=parsed[idx+3], dowSet=parsed[idx+4];
+  var secSet=isSpring?parsed[0]:null;
+  var now=new Date();
+  var d=new Date(now.getTime());
+  d.setSeconds(0,0);
+  var minSec=0;
+  if(isSpring){
+    minSec=now.getSeconds()+1; // 首分钟从当前秒+1 开始
+  } else {
+    d.setTime(d.getTime()+60000); // Linux 从下一分钟整点开始
+  }
+  var firstMinute=true;
+  var guard=0, maxGuard=count*530000+10000;
+  while(runs.length<count && guard<maxGuard){
+    if(cronFieldMatches(minSet, d.getMinutes()) &&
+       cronFieldMatches(hrSet, d.getHours()) &&
+       cronDayMatches(domSet, monSet, dowSet, d)){
+      if(isSpring){
+        var s0 = firstMinute ? minSec : 0;
+        for(var s=s0;s<60 && runs.length<count;s++){
+          if(cronFieldMatches(secSet, s)){
+            var t=new Date(d.getTime()); t.setSeconds(s);
+            runs.push(t);
+          }
+        }
+      } else {
+        runs.push(new Date(d.getTime()));
+      }
+    }
+    d.setTime(d.getTime()+60000);
+    firstMinute=false;
+    guard++;
+  }
+  return runs;
+}
+function debugCron(){
+  var fmt=val('cron-fmt');
+  var expr=val('cron-in').trim();
+  var statusEl=document.getElementById('cron-status');
+  if(!expr){msg('error','请输入 cron 表达式');return}
+  var isSpring = fmt==='spring';
+  var fields = expr.split(/\s+/);
+  var expected = isSpring?6:5;
+  if(fields.length!==expected){
+    statusEl.textContent='✗ 字段数错误：'+(isSpring?'Spring(6段)':'Linux(5段)')+' 应为 '+expected+' 段';
+    statusEl.style.color='#FC9838';
+    setVal('cron-desc',''); setVal('cron-next','');
+    msg('error','字段数错误'); return;
+  }
+  var ranges = isSpring ? [[0,59],[0,59],[0,23],[1,31],[1,12],[0,7]] : [[0,59],[0,23],[1,31],[1,12],[0,7]];
+  var parsed=[], unsup=false;
+  for(var i=0;i<expected;i++){
+    var r=ranges[i];
+    var names = (i===expected-2)?MONTH_NAMES:(i===expected-1)?DOW_NAMES:null;
+    var res=cronParseField(fields[i], r[0], r[1], names);
+    if(res==='invalid'){
+      statusEl.textContent='✗ 第 '+(i+1)+' 段「'+fields[i]+'」格式无效';
+      statusEl.style.color='#E4000F';
+      setVal('cron-desc',''); setVal('cron-next','');
+      msg('error','表达式无效'); return;
+    }
+    if(res==='unsupported'){ unsup=true; parsed.push(null); }
+    else parsed.push(res);
+  }
+  var desc='';
+  try{ desc=cronstrue.toString(expr, {locale:'zh_CN', use24HourTimeFormat:true}); }catch(e){ desc='（说明生成失败）'; }
+  setVal('cron-desc', desc);
+  var count=parseInt(val('cron-count'),10); if(isNaN(count)||count<1)count=5; if(count>20)count=20;
+  if(unsup){
+    statusEl.textContent='✓ 基本格式有效（含 L/W/#/C，仅展示说明）';
+    statusEl.style.color='#B8F818';
+    setVal('cron-next','（含 L/W/#/C 特殊字符，下次时间暂不计算）');
+  } else {
+    var runs=cronComputeRuns(parsed, isSpring, count);
+    statusEl.textContent='✓ 有效';
+    statusEl.style.color='#B8F818';
+    var lines=[];
+    for(var j=0;j<runs.length;j++) lines.push(fmtDate(runs[j]));
+    setVal('cron-next', lines.join('\n'));
+  }
+  msg('ok','解析完成');
+}
+function cronFmtChange(){
+  var f=val('cron-fmt');
+  var el=document.getElementById('cron-in');
+  el.placeholder = f==='spring' ? '0 0 12 * * * （秒 分 时 日 月 周）' : '0 12 * * * （分 时 日 月 周）';
+}
+function cronSample(){
+  var f=val('cron-fmt');
+  setVal('cron-in', f==='spring' ? '0/15 * * * * *' : '0 9 * * 1-5');
+  msg('ok','已填入示例');
+}
+function cronClear(){
+  setVal('cron-in',''); setVal('cron-desc',''); setVal('cron-next','');
+  document.getElementById('cron-status').textContent='尚未解析';
+  msg('ok','已清空');
 }
 
 /* ---- hash 路由 ---- */
