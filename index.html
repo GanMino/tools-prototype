@@ -347,6 +347,9 @@ select.btn{appearance:none;-webkit-appearance:none}
 .md-preview ul,.md-preview ol{padding-left:20px}
 .img-preview{display:none;max-width:100%;max-height:320px;border:3px solid #000;box-shadow:3px 3px 0 0 #000;image-rendering:pixelated;margin:0 auto}
 
+.search-box{display:flex;gap:10px;margin:18px 0 8px;align-items:center}
+.search-box .search-input{flex:1;padding:12px 14px;font-size:15px}
+
 /* ============ 消息框 ============ */
 .msg-box{
   position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
@@ -433,6 +436,10 @@ select.btn{appearance:none;-webkit-appearance:none}
             欢迎来到 8-BIT 工具集。这里收集了开发者常用的免费在线工具，数据全程在本地浏览器处理，不会上传服务器。
             <span class="cursor"></span>
           </div>
+        </div>
+        <div class="search-box">
+          <input class="io-input search-input" id="home-search" placeholder="搜索工具…（如 json / 哈希 / 二维码，按 / 快速定位）" oninput="filterTools(this.value)">
+          <button class="btn btn--red" onclick="clearSearch()">清空</button>
         </div>
         <div class="grid" id="home-grid">
           <a class="card" onclick="showView('json')">
@@ -1883,7 +1890,7 @@ function renderMenu(){
     TOOLS.forEach(function(t){
       if(t.cat!==cat) return;
       navH += '<a class="nav-item" data-tool="'+t.id+'"><span class="ico">'+t.icon+'</span>'+t.name+'</a>';
-      gridH += '<a class="card" data-tool="'+t.id+'"><div class="c-ico">'+t.icon+'</div><div class="c-name">'+t.name+'</div><div class="c-desc">'+t.desc+'</div></a>';
+      gridH += '<a class="card" data-tool="'+t.id+'" data-search="'+(t.name+' '+t.desc+' '+t.cat).toLowerCase()+'"><div class="c-ico">'+t.icon+'</div><div class="c-name">'+t.name+'</div><div class="c-desc">'+t.desc+'</div></a>';
     });
     gridH += '</div>';
   });
@@ -2445,6 +2452,40 @@ function qrDecodeClear(){
   document.getElementById('qr-file').value='';
   msg('ok','已清空');
 }
+
+/* ---- 首页搜索 ---- */
+function filterTools(q){
+  q=(q||'').trim().toLowerCase();
+  var titles=document.querySelectorAll('#home-grid .cat-title');
+  for(var i=0;i<titles.length;i++){
+    var title=titles[i];
+    var grid=title.nextElementSibling;
+    if(!grid) continue;
+    var cards=grid.querySelectorAll('.card');
+    var anyVisible=false;
+    for(var j=0;j<cards.length;j++){
+      var s=cards[j].getAttribute('data-search')||'';
+      var match = q==='' || s.indexOf(q)>=0;
+      cards[j].style.display = match ? '' : 'none';
+      if(match) anyVisible=true;
+    }
+    title.style.display = anyVisible ? '' : 'none';
+    grid.style.display = anyVisible ? '' : 'none';
+  }
+}
+function clearSearch(){
+  var s=document.getElementById('home-search');
+  if(s) s.value='';
+  filterTools('');
+}
+document.addEventListener('keydown', function(e){
+  if(e.key==='/' && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){
+    e.preventDefault();
+    showView('home');
+    var s=document.getElementById('home-search');
+    if(s) setTimeout(function(){ s.focus(); }, 0);
+  }
+});
 
 /* ---- hash 路由 ---- */
 function initHash(){
