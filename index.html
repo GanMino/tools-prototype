@@ -1042,6 +1042,7 @@ select.btn{appearance:none;-webkit-appearance:none}
               <select class="io-input" id="cron-fmt" onchange="cronFmtChange()">
                 <option value="linux" selected>Linux cron（5 段）</option>
                 <option value="spring">Spring cron（6 段）</option>
+                <option value="quartz7">Quartz（7 段，带年份）</option>
               </select>
             </div>
             <div class="field">
@@ -1067,6 +1068,102 @@ select.btn{appearance:none;-webkit-appearance:none}
         </div>
       </section>
 
+      <!-- JSON ↔ YAML -->
+      <section class="view view--tool" id="view-jy">
+        <div class="title-row"><div class="badge">JY</div><h2>JSON ↔ YAML</h2></div>
+        <p class="tool-desc">JSON 与 YAML 双向转换。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="jsonToYaml()">JSON → YAML</button>
+          <button class="btn" onclick="yamlToJson()">YAML → JSON</button>
+          <button class="btn btn--gold" onclick="copyText('jy-json')">复制 JSON</button>
+          <button class="btn btn--gold" onclick="copyText('jy-yaml')">复制 YAML</button>
+          <button class="btn btn--red" onclick="clearBoth('jy-json','jy-yaml')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">JSON</span><span class="hint">可编辑</span></div>
+            <textarea class="io" id="jy-json" spellcheck="false" placeholder='{"name":"林克","hp":3}'></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">YAML</span><span class="hint">可编辑</span></div>
+            <textarea class="io" id="jy-yaml" spellcheck="false" placeholder="name: 林克"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- HTML 实体 -->
+      <section class="view view--tool" id="view-html">
+        <div class="title-row"><div class="badge">符</div><h2>HTML 实体编解码</h2></div>
+        <p class="tool-desc">HTML 特殊字符（如 &amp; &lt; &gt;）编码与解码。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="htmlEncode()">编码</button>
+          <button class="btn" onclick="htmlDecode()">解码</button>
+          <button class="btn btn--gold" onclick="copyText('html-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('html-in','html-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">原文</span></div>
+            <textarea class="io" id="html-in" spellcheck="false" placeholder="输入要编解码的 HTML 文本…"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果（只读）</span></div>
+            <textarea class="io io--out" id="html-out" readonly spellcheck="false" placeholder="结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 人民币大写 -->
+      <section class="view view--tool" id="view-rmb">
+        <div class="title-row"><div class="badge">钱</div><h2>人民币大写</h2></div>
+        <p class="tool-desc">数字金额转中文大写（壹贰叁…）。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="convRMB()">转换</button>
+          <button class="btn btn--gold" onclick="copyText('rmb-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('rmb-in','rmb-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">金额</span></div>
+            <div class="field">
+              <label>金额（元）</label>
+              <input class="io-input" id="rmb-in" value="1234.56" inputmode="decimal" placeholder="1234.56">
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">大写（只读）</span></div>
+            <textarea class="io io--out" id="rmb-out" readonly spellcheck="false" placeholder="大写金额…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- JSON ↔ CSV -->
+      <section class="view view--tool" id="view-csv">
+        <div class="title-row"><div class="badge">CS</div><h2>JSON ↔ CSV</h2></div>
+        <p class="tool-desc">JSON 对象数组与 CSV 表格双向转换。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="jsonToCsv()">JSON → CSV</button>
+          <button class="btn" onclick="csvToJson()">CSV → JSON</button>
+          <button class="btn btn--gold" onclick="copyText('csv-json')">复制 JSON</button>
+          <button class="btn btn--gold" onclick="copyText('csv-out')">复制 CSV</button>
+          <button class="btn btn--red" onclick="csvClear()">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">JSON</span><span class="hint">可编辑</span></div>
+            <textarea class="io" id="csv-json" spellcheck="false" placeholder='[{"name":"林克","hp":3}]'></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">CSV</span><span class="hint">可编辑</span></div>
+            <textarea class="io" id="csv-out" spellcheck="false" placeholder="name,hp"></textarea>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -1076,6 +1173,7 @@ select.btn{appearance:none;-webkit-appearance:none}
 <script async src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
 <script async src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script async src="https://cdn.jsdelivr.net/npm/cronstrue@2.50.0/dist/cronstrue-i18n.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
 <script>
 function $(id){return document.getElementById(id)}
 
@@ -1598,7 +1696,11 @@ var TOOLS = [
   {cat:'生成器',     id:'pwd',   name:'随机密码', icon:'密', desc:'生成强随机密码'},
   {cat:'调试工具',   id:'ws',    name:'WebSocket', icon:'连', desc:'WebSocket 连接与消息调试'},
   {cat:'调试工具',   id:'mqtt',  name:'MQTT', icon:'讯', desc:'MQTT 订阅 / 发布调试'},
-  {cat:'调试工具',   id:'cron',  name:'Cron 调试', icon:'钟', desc:'Linux / Spring 定时表达式解析'}
+  {cat:'调试工具',   id:'cron',  name:'Cron 调试', icon:'钟', desc:'Linux / Spring / Quartz 定时解析'},
+  {cat:'编码与转换', id:'jy',    name:'JSON ↔ YAML', icon:'JY', desc:'JSON 与 YAML 双向转换'},
+  {cat:'编码与转换', id:'csv',   name:'JSON ↔ CSV', icon:'CS', desc:'JSON 数组与 CSV 表格互转'},
+  {cat:'文本工具',   id:'html',  name:'HTML 实体', icon:'符', desc:'HTML 特殊字符编码与解码'},
+  {cat:'文本工具',   id:'rmb',   name:'人民币大写', icon:'钱', desc:'数字金额转中文大写'}
 ];
 
 function renderMenu(){
@@ -1770,37 +1872,69 @@ function cronFieldMatches(set, value){
   if(value===0 && set[7]) return true;
   return !!set[value];
 }
-function cronDayMatches(domSet, monSet, dowSet, d){
+function domSpecialInfo(f){
+  f=(f||'').trim();
+  if(/^L(?:-\d+)?$/i.test(f)){
+    var off=0;
+    if(f.indexOf('-')>=0) off=parseInt(f.split('-')[1],10);
+    return {type:'L', offset:off};
+  }
+  if(/^\d+W$/i.test(f)){
+    return {type:'W', day:parseInt(f,10)};
+  }
+  return null;
+}
+function domSpecialMatch(spec, d){
+  var y=d.getFullYear(), m=d.getMonth();
+  var lastDay = new Date(y, m+1, 0).getDate();
+  if(spec.type==='L'){
+    return d.getDate() === (lastDay - spec.offset);
+  }
+  if(spec.type==='W'){
+    var target = Math.min(spec.day, lastDay);
+    var dw = new Date(y, m, target).getDay();
+    if(dw===0){ target+=1; if(target>lastDay) target-=2; }
+    else if(dw===6){ target-=1; if(target<1) target+=2; }
+    return d.getDate() === target;
+  }
+  return false;
+}
+function cronDayMatches(domSet, monSet, dowSet, domSpecial, d){
   if(!cronFieldMatches(monSet, d.getMonth()+1)) return false;
-  var domR = domSet!==null, dowR = dowSet!==null;
-  var domM = cronFieldMatches(domSet, d.getDate());
+  var domM;
+  if(domSpecial){ domM = domSpecialMatch(domSpecial, d); }
+  else { domM = cronFieldMatches(domSet, d.getDate()); }
+  var domR = (domSet!==null) || (domSpecial!==null);
+  var dowR = dowSet!==null;
   var dowM = cronFieldMatches(dowSet, d.getDay());
   if(domR && dowR) return domM || dowM;
   if(domR) return domM;
   if(dowR) return dowM;
   return true;
 }
-function cronComputeRuns(parsed, isSpring, count){
+function cronComputeRuns(parsed, hasSec, hasYear, domSpecial, count){
   var runs=[];
-  var idx=isSpring?1:0;
+  var idx=hasSec?1:0;
   var minSet=parsed[idx], hrSet=parsed[idx+1], domSet=parsed[idx+2], monSet=parsed[idx+3], dowSet=parsed[idx+4];
-  var secSet=isSpring?parsed[0]:null;
+  var yearSet = hasYear ? parsed[idx+5] : null;
+  var secSet=hasSec?parsed[0]:null;
   var now=new Date();
   var d=new Date(now.getTime());
   d.setSeconds(0,0);
   var minSec=0;
-  if(isSpring){
-    minSec=now.getSeconds()+1; // 首分钟从当前秒+1 开始
+  if(hasSec){
+    minSec=now.getSeconds()+1;
   } else {
-    d.setTime(d.getTime()+60000); // Linux 从下一分钟整点开始
+    d.setTime(d.getTime()+60000);
   }
   var firstMinute=true;
   var guard=0, maxGuard=count*530000+10000;
   while(runs.length<count && guard<maxGuard){
     if(cronFieldMatches(minSet, d.getMinutes()) &&
        cronFieldMatches(hrSet, d.getHours()) &&
-       cronDayMatches(domSet, monSet, dowSet, d)){
-      if(isSpring){
+       (yearSet===null || cronFieldMatches(yearSet, d.getFullYear())) &&
+       cronDayMatches(domSet, monSet, dowSet, domSpecial, d)){
+      if(hasSec){
         var s0 = firstMinute ? minSec : 0;
         for(var s=s0;s<60 && runs.length<count;s++){
           if(cronFieldMatches(secSet, s)){
@@ -1823,20 +1957,23 @@ function debugCron(){
   var expr=val('cron-in').trim();
   var statusEl=document.getElementById('cron-status');
   if(!expr){msg('error','请输入 cron 表达式');return}
-  var isSpring = fmt==='spring';
+  var cfg;
+  if(fmt==='linux') cfg={label:'Linux(5段)', count:5, ranges:[[0,59],[0,23],[1,31],[1,12],[0,7]], monthIdx:3, dowIdx:4, domIdx:2, hasSec:false, hasYear:false};
+  else if(fmt==='spring') cfg={label:'Spring(6段)', count:6, ranges:[[0,59],[0,59],[0,23],[1,31],[1,12],[0,7]], monthIdx:4, dowIdx:5, domIdx:3, hasSec:true, hasYear:false};
+  else cfg={label:'Quartz(7段)', count:7, ranges:[[0,59],[0,59],[0,23],[1,31],[1,12],[0,7],[1970,2099]], monthIdx:4, dowIdx:5, domIdx:3, hasSec:true, hasYear:true};
   var fields = expr.split(/\s+/);
-  var expected = isSpring?6:5;
-  if(fields.length!==expected){
-    statusEl.textContent='✗ 字段数错误：'+(isSpring?'Spring(6段)':'Linux(5段)')+' 应为 '+expected+' 段';
+  if(fields.length!==cfg.count){
+    statusEl.textContent='✗ 字段数错误：'+cfg.label+' 应为 '+cfg.count+' 段，实际 '+fields.length+' 段';
     statusEl.style.color='#FC9838';
     setVal('cron-desc',''); setVal('cron-next','');
     msg('error','字段数错误'); return;
   }
-  var ranges = isSpring ? [[0,59],[0,59],[0,23],[1,31],[1,12],[0,7]] : [[0,59],[0,23],[1,31],[1,12],[0,7]];
+  var domSpecial = domSpecialInfo(fields[cfg.domIdx]);
   var parsed=[], unsup=false;
-  for(var i=0;i<expected;i++){
-    var r=ranges[i];
-    var names = (i===expected-2)?MONTH_NAMES:(i===expected-1)?DOW_NAMES:null;
+  for(var i=0;i<cfg.count;i++){
+    if(i===cfg.domIdx && domSpecial){ parsed.push(null); continue; }
+    var r=cfg.ranges[i];
+    var names = (i===cfg.monthIdx)?MONTH_NAMES:(i===cfg.dowIdx)?DOW_NAMES:null;
     var res=cronParseField(fields[i], r[0], r[1], names);
     if(res==='invalid'){
       statusEl.textContent='✗ 第 '+(i+1)+' 段「'+fields[i]+'」格式无效';
@@ -1852,11 +1989,11 @@ function debugCron(){
   setVal('cron-desc', desc);
   var count=parseInt(val('cron-count'),10); if(isNaN(count)||count<1)count=5; if(count>20)count=20;
   if(unsup){
-    statusEl.textContent='✓ 基本格式有效（含 L/W/#/C，仅展示说明）';
+    statusEl.textContent='✓ 基本格式有效（含未支持的特殊字符，仅展示说明）';
     statusEl.style.color='#B8F818';
-    setVal('cron-next','（含 L/W/#/C 特殊字符，下次时间暂不计算）');
+    setVal('cron-next','（含 # 或星期 L 等特殊字符，下次时间暂不计算）');
   } else {
-    var runs=cronComputeRuns(parsed, isSpring, count);
+    var runs=cronComputeRuns(parsed, cfg.hasSec, cfg.hasYear, domSpecial, count);
     statusEl.textContent='✓ 有效';
     statusEl.style.color='#B8F818';
     var lines=[];
@@ -1868,11 +2005,13 @@ function debugCron(){
 function cronFmtChange(){
   var f=val('cron-fmt');
   var el=document.getElementById('cron-in');
-  el.placeholder = f==='spring' ? '0 0 12 * * * （秒 分 时 日 月 周）' : '0 12 * * * （分 时 日 月 周）';
+  el.placeholder = f==='linux' ? '0 12 * * * （分 时 日 月 周）' : (f==='spring' ? '0 0 12 * * * （秒 分 时 日 月 周）' : '0 0 12 1 1 * 2027 （秒 分 时 日 月 周 年）');
 }
 function cronSample(){
   var f=val('cron-fmt');
-  setVal('cron-in', f==='spring' ? '0/15 * * * * *' : '0 9 * * 1-5');
+  if(f==='spring') setVal('cron-in','0/15 * * * * *');
+  else if(f==='quartz7') setVal('cron-in','0 0 9 * * MON-FRI 2026');
+  else setVal('cron-in','0 9 * * 1-5');
   msg('ok','已填入示例');
 }
 function cronClear(){
@@ -1880,6 +2019,149 @@ function cronClear(){
   document.getElementById('cron-status').textContent='尚未解析';
   msg('ok','已清空');
 }
+
+/* ---- JSON ↔ YAML ---- */
+function jsonToYaml(){
+  var src=val('jy-json').trim();
+  try{
+    var obj = src==='' ? {} : JSON.parse(src);
+    setVal('jy-yaml', jsyaml.dump(obj));
+    msg('ok','JSON → YAML 完成');
+  }catch(e){msg('error','JSON 解析失败：'+e.message)}
+}
+function yamlToJson(){
+  var src=val('jy-yaml');
+  try{
+    var obj = jsyaml.load(src);
+    setVal('jy-json', JSON.stringify(obj, null, 2));
+    msg('ok','YAML → JSON 完成');
+  }catch(e){msg('error','YAML 解析失败：'+e.message)}
+}
+
+/* ---- HTML 实体 ---- */
+function htmlEncode(){
+  var s=val('html-in');
+  setVal('html-out', s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'));
+  msg('ok','编码完成');
+}
+function htmlDecode(){
+  var ta=document.createElement('textarea');
+  ta.innerHTML=val('html-in');
+  setVal('html-out', ta.value);
+  msg('ok','解码完成');
+}
+
+/* ---- 人民币大写 ---- */
+var RMB_DIGITS='零壹贰叁肆伍陆柒捌玖';
+function rmbSectionToUpper(section){
+  var units=['','拾','佰','仟'];
+  var s=String(section);
+  var out='', zero=false;
+  for(var i=0;i<s.length;i++){
+    var d=parseInt(s.charAt(i),10);
+    var pos=s.length-1-i;
+    if(d===0){ zero=true; }
+    else { if(zero) out+='零'; out+=RMB_DIGITS.charAt(d)+units[pos]; zero=false; }
+  }
+  return out;
+}
+function rmbIntToUpper(n){
+  if(n===0) return '零';
+  var units=['','万','亿','万亿'];
+  var result='', ui=0;
+  while(n>0){
+    var sec=n%10000;
+    if(sec>0){ result = rmbSectionToUpper(sec) + units[ui] + result; }
+    else { if(result && result.charAt(0)!=='零') result = '零' + result; }
+    n=Math.floor(n/10000);
+    ui++;
+  }
+  return result;
+}
+function numberToRMB(num){
+  if(isNaN(num)) return null;
+  var s=num.toFixed(2);
+  var neg = s.charAt(0)==='-';
+  if(neg) s=s.slice(1);
+  var parts=s.split('.');
+  var intVal=parseInt(parts[0],10);
+  var jiao=parseInt(parts[1].charAt(0),10);
+  var fen=parseInt(parts[1].charAt(1),10);
+  var result=(neg?'负':'')+rmbIntToUpper(intVal)+'元';
+  if(jiao===0 && fen===0){ result+='整'; }
+  else {
+    if(jiao>0) result+=RMB_DIGITS.charAt(jiao)+'角';
+    if(fen>0) result+=RMB_DIGITS.charAt(fen)+'分';
+  }
+  return result;
+}
+function convRMB(){
+  var n=parseFloat(val('rmb-in'));
+  if(isNaN(n)){msg('error','请输入有效金额');return}
+  var r=numberToRMB(n);
+  if(!r){msg('error','转换失败');return}
+  setVal('rmb-out', r);
+  msg('ok','转换完成');
+}
+
+/* ---- JSON ↔ CSV ---- */
+function csvEscape(v){
+  if(v===null||v===undefined) v='';
+  v=String(v);
+  if(/[",\n]/.test(v)) v='"'+v.replace(/"/g,'""')+'"';
+  return v;
+}
+function jsonToCsv(){
+  var src=val('csv-json').trim();
+  try{
+    var arr=JSON.parse(src);
+    if(!Array.isArray(arr)){msg('error','JSON 需为对象数组');return}
+    var headers=[];
+    arr.forEach(function(o){ Object.keys(o).forEach(function(k){ if(headers.indexOf(k)<0) headers.push(k); }); });
+    var lines=[headers.join(',')];
+    arr.forEach(function(o){
+      var row=headers.map(function(k){ return csvEscape(o[k]); });
+      lines.push(row.join(','));
+    });
+    setVal('csv-out', lines.join('\n'));
+    msg('ok','JSON → CSV 完成');
+  }catch(e){msg('error','JSON 解析失败：'+e.message)}
+}
+function parseCSV(text){
+  var rows=[], row=[], field='', inQ=false;
+  for(var i=0;i<text.length;i++){
+    var c=text.charAt(i);
+    if(inQ){
+      if(c==='"'){ if(text.charAt(i+1)==='"'){ field+='"'; i++; } else inQ=false; }
+      else field+=c;
+    } else {
+      if(c==='"') inQ=true;
+      else if(c===','){ row.push(field); field=''; }
+      else if(c==='\n'){ row.push(field); field=''; rows.push(row); row=[]; }
+      else if(c==='\r'){ }
+      else field+=c;
+    }
+  }
+  if(field!==''||row.length>0){ row.push(field); rows.push(row); }
+  return rows;
+}
+function csvToJson(){
+  var src=val('csv-out');
+  var rows=parseCSV(src);
+  if(rows.length<2){msg('error','CSV 至少需要表头和数据行');return}
+  var headers=rows[0];
+  var out=[];
+  for(var i=1;i<rows.length;i++){
+    var obj={};
+    for(var j=0;j<headers.length;j++){
+      obj[headers[j]] = rows[i][j]!==undefined ? rows[i][j] : '';
+    }
+    out.push(obj);
+  }
+  setVal('csv-json', JSON.stringify(out, null, 2));
+  msg('ok','CSV → JSON 完成');
+}
+function csvClear(){ setVal('csv-json',''); setVal('csv-out',''); msg('ok','已清空'); }
 
 /* ---- hash 路由 ---- */
 function initHash(){
