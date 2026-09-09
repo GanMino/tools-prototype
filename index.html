@@ -321,6 +321,32 @@ select.btn{appearance:none;-webkit-appearance:none}
   image-rendering:pixelated;background:#fff;
 }
 
+/* diff / markdown / 图片预览 */
+.diff-out{
+  flex:1;min-height:0;overflow:auto;
+  background:#0d0d0d;color:var(--tan);
+  border:3px solid #000;box-shadow:inset 0 0 0 2px #3a3a2a;
+  font-family:var(--font-body);font-size:13px;line-height:1.6;
+  padding:10px;white-space:pre-wrap;word-break:break-all;
+}
+.d-line{padding:0 4px}
+.d-add{background:#0a3a0a;color:#8ff88f}
+.d-del{background:#3a0a0a;color:#f88f8f}
+.d-eq{color:var(--tan)}
+.md-preview{
+  flex:1;min-height:0;overflow:auto;
+  background:#0d0d0d;color:var(--tan);
+  border:3px solid #000;box-shadow:inset 0 0 0 2px #3a3a2a;
+  font-family:var(--font-body);font-size:14px;line-height:1.7;
+  padding:14px;
+}
+.md-preview h1,.md-preview h2,.md-preview h3{color:var(--gold);font-family:var(--font-title);margin:12px 0 8px;font-size:15px}
+.md-preview code{background:#1a1a1a;padding:1px 4px;border:1px solid #333;color:var(--green-neon)}
+.md-preview pre{background:#0a0a08;border:3px solid #000;padding:10px;overflow:auto;color:var(--green-neon)}
+.md-preview a{color:var(--blue-light)}
+.md-preview ul,.md-preview ol{padding-left:20px}
+.img-preview{display:none;max-width:100%;max-height:320px;border:3px solid #000;box-shadow:3px 3px 0 0 #000;image-rendering:pixelated;margin:0 auto}
+
 /* ============ 消息框 ============ */
 .msg-box{
   position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
@@ -1164,6 +1190,139 @@ select.btn{appearance:none;-webkit-appearance:none}
         </div>
       </section>
 
+      <!-- 图片转 Base64 -->
+      <section class="view view--tool" id="view-imgb64">
+        <div class="title-row"><div class="badge">图</div><h2>图片转 Base64</h2></div>
+        <p class="tool-desc">图片与 Base64 字符串互转，本地处理不上传。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="document.getElementById('img-file').click()">选择图片</button>
+          <button class="btn btn--blue" onclick="b64ToImg()">Base64 → 图片</button>
+          <button class="btn btn--gold" onclick="copyText('img-b64')">复制 Base64</button>
+          <button class="btn btn--red" onclick="imgClear()">清空</button>
+        </div>
+        <input type="file" id="img-file" accept="image/*" style="display:none" onchange="imgToBase64()">
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">Base64</span><span class="hint">选择图片自动生成</span></div>
+            <textarea class="io" id="img-b64" spellcheck="false" placeholder="选择图片后自动生成，或粘贴 Base64 数据…"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">图片预览</span><span class="hint">预览</span></div>
+            <div style="flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center">
+              <img class="img-preview" id="img-preview" alt="预览">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Markdown 预览 -->
+      <section class="view view--tool" id="view-md">
+        <div class="title-row"><div class="badge">MD</div><h2>Markdown 预览</h2></div>
+        <p class="tool-desc">实时预览 Markdown 渲染效果。</p>
+        <div class="toolbar">
+          <button class="btn btn--red" onclick="clearBoth('md-in','md-in')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">Markdown</span><span class="hint">可编辑</span></div>
+            <textarea class="io" id="md-in" spellcheck="false" oninput="renderMarkdown()" placeholder="# 标题&#10;&#10;**粗体** 与 *斜体*&#10;&#10;- 列表项"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">预览</span><span class="hint">实时</span></div>
+            <div class="md-preview" id="md-preview"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SQL 格式化 -->
+      <section class="view view--tool" id="view-sql">
+        <div class="title-row"><div class="badge">库</div><h2>SQL 格式化</h2></div>
+        <p class="tool-desc">SQL 语句格式化，支持多种方言。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="formatSQL()">格式化</button>
+          <button class="btn btn--gold" onclick="copyText('sql-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('sql-in','sql-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">SQL</span></div>
+            <div class="field">
+              <label>方言</label>
+              <select class="io-input" id="sql-dialect">
+                <option value="mysql" selected>MySQL</option>
+                <option value="postgresql">PostgreSQL</option>
+                <option value="sqlite">SQLite</option>
+                <option value="sql">标准 SQL</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>SQL 语句</label>
+            </div>
+            <textarea class="io" id="sql-in" spellcheck="false" placeholder="select * from users where id = 1 order by name"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">格式化结果</span></div>
+            <textarea class="io io--out" id="sql-out" readonly spellcheck="false" placeholder="格式化结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 文本 Diff -->
+      <section class="view view--tool" id="view-diff">
+        <div class="title-row"><div class="badge">比</div><h2>文本 Diff 对比</h2></div>
+        <p class="tool-desc">对比两段文本差异，绿色为新增、红色为删除。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="doDiff()">对比</button>
+          <button class="btn btn--red" onclick="diffClear()">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">旧 + 新</span></div>
+            <div class="field">
+              <label>旧文本</label>
+            </div>
+            <textarea class="io" id="diff-old" style="flex:none;height:40%;min-height:80px" spellcheck="false" placeholder="旧文本…"></textarea>
+            <div class="field" style="margin-top:10px">
+              <label>新文本</label>
+            </div>
+            <textarea class="io" id="diff-new" style="flex:1;min-height:80px" spellcheck="false" placeholder="新文本…"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">差异结果</span><span class="hint">diff</span></div>
+            <div class="diff-out" id="diff-out"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 二维码解码 -->
+      <section class="view view--tool" id="view-qrdecode">
+        <div class="title-row"><div class="badge">扫</div><h2>二维码解码</h2></div>
+        <p class="tool-desc">上传二维码图片，识别其中的内容。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="document.getElementById('qr-file').click()">选择图片</button>
+          <button class="btn btn--gold" onclick="copyText('qr-decode-out')">复制结果</button>
+          <button class="btn btn--red" onclick="qrDecodeClear()">清空</button>
+        </div>
+        <input type="file" id="qr-file" accept="image/*" style="display:none" onchange="qrDecodeFile()">
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">图片</span><span class="hint">上传二维码</span></div>
+            <div style="flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center">
+              <img class="img-preview" id="qr-preview" alt="二维码预览">
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">识别结果</span><span class="hint">内容</span></div>
+            <textarea class="io io--out" id="qr-decode-out" readonly spellcheck="false" placeholder="识别出的内容…"></textarea>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -1174,6 +1333,10 @@ select.btn{appearance:none;-webkit-appearance:none}
 <script async src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script async src="https://cdn.jsdelivr.net/npm/cronstrue@2.50.0/dist/cronstrue-i18n.min.js"></script>
 <script async src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/sql-formatter@15.4.5/dist/sql-formatter.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
 function $(id){return document.getElementById(id)}
 
@@ -1700,7 +1863,12 @@ var TOOLS = [
   {cat:'编码与转换', id:'jy',    name:'JSON ↔ YAML', icon:'JY', desc:'JSON 与 YAML 双向转换'},
   {cat:'编码与转换', id:'csv',   name:'JSON ↔ CSV', icon:'CS', desc:'JSON 数组与 CSV 表格互转'},
   {cat:'文本工具',   id:'html',  name:'HTML 实体', icon:'符', desc:'HTML 特殊字符编码与解码'},
-  {cat:'文本工具',   id:'rmb',   name:'人民币大写', icon:'钱', desc:'数字金额转中文大写'}
+  {cat:'文本工具',   id:'rmb',   name:'人民币大写', icon:'钱', desc:'数字金额转中文大写'},
+  {cat:'编码与转换', id:'imgb64', name:'图片转 Base64', icon:'图', desc:'图片与 Base64 互转'},
+  {cat:'编码与转换', id:'sql',    name:'SQL 格式化', icon:'库', desc:'SQL 语句格式化（多方言）'},
+  {cat:'文本工具',   id:'md',     name:'Markdown 预览', icon:'MD', desc:'Markdown 实时预览'},
+  {cat:'文本工具',   id:'diff',   name:'文本 Diff 对比', icon:'比', desc:'两段文本差异对比'},
+  {cat:'生成器',     id:'qrdecode', name:'二维码解码', icon:'扫', desc:'识别二维码图片内容'}
 ];
 
 function renderMenu(){
@@ -2162,6 +2330,121 @@ function csvToJson(){
   msg('ok','CSV → JSON 完成');
 }
 function csvClear(){ setVal('csv-json',''); setVal('csv-out',''); msg('ok','已清空'); }
+
+/* ---- 图片转 Base64 ---- */
+function imgToBase64(){
+  var f=document.getElementById('img-file').files[0];
+  if(!f) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    setVal('img-b64', e.target.result);
+    document.getElementById('img-preview').src=e.target.result;
+    document.getElementById('img-preview').style.display='block';
+    msg('ok','图片已转为 Base64');
+  };
+  reader.readAsDataURL(f);
+}
+function b64ToImg(){
+  var b64=val('img-b64').trim();
+  if(!b64){msg('error','请输入 Base64 数据');return}
+  var src=b64;
+  if(src.indexOf('data:')!==0){ src='data:image/png;base64,'+b64; }
+  document.getElementById('img-preview').src=src;
+  document.getElementById('img-preview').style.display='block';
+  msg('ok','已预览');
+}
+function imgClear(){
+  setVal('img-b64','');
+  document.getElementById('img-preview').src='';
+  document.getElementById('img-preview').style.display='none';
+  document.getElementById('img-file').value='';
+  msg('ok','已清空');
+}
+
+/* ---- Markdown ---- */
+function renderMarkdown(){
+  if(typeof marked==='undefined') return;
+  var md=val('md-in');
+  document.getElementById('md-preview').innerHTML = marked.parse(md);
+}
+
+/* ---- SQL 格式化 ---- */
+function formatSQL(){
+  if(typeof sqlFormatter==='undefined'){msg('error','SQL 库未加载，请刷新');return}
+  var sql=val('sql-in');
+  if(!sql.trim()){msg('error','请输入 SQL');return}
+  var dialect=val('sql-dialect');
+  try{
+    var out=sqlFormatter.format(sql, { language:dialect, tabWidth:2, keywordCase:'upper' });
+    setVal('sql-out', out);
+    msg('ok','格式化完成');
+  }catch(e){msg('error','格式化失败：'+e.message)}
+}
+
+/* ---- 文本 Diff ---- */
+function doDiff(){
+  if(typeof Diff==='undefined'){msg('error','diff 库未加载，请刷新');return}
+  var oldText=val('diff-old');
+  var newText=val('diff-new');
+  var changes=Diff.diffLines(oldText, newText);
+  var html='';
+  changes.forEach(function(part){
+    var cls = part.added ? 'd-add' : part.removed ? 'd-del' : 'd-eq';
+    var sign = part.added ? '+' : part.removed ? '-' : ' ';
+    var lines=part.value.split('\n');
+    for(var i=0;i<lines.length;i++){
+      if(lines[i]==='' && i===lines.length-1) continue;
+      html += '<div class="d-line '+cls+'">'+sign+' '+escapeHtml(lines[i])+'</div>';
+    }
+  });
+  document.getElementById('diff-out').innerHTML = html || '<div class="d-eq">（无差异）</div>';
+  msg('ok','对比完成');
+}
+function diffClear(){
+  setVal('diff-old',''); setVal('diff-new','');
+  document.getElementById('diff-out').innerHTML='';
+  msg('ok','已清空');
+}
+
+/* ---- 二维码解码 ---- */
+function qrDecodeFile(){
+  var f=document.getElementById('qr-file').files[0];
+  if(!f) return;
+  var url=URL.createObjectURL(f);
+  var img=new Image();
+  img.onload=function(){
+    document.getElementById('qr-preview').src=url;
+    document.getElementById('qr-preview').style.display='block';
+    try{ decodeQRFromImage(img); }catch(e){ msg('error','解码失败：'+e.message); }
+    URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+function decodeQRFromImage(img){
+  if(typeof jsQR==='undefined'){msg('error','二维码解码库未加载，请刷新');return}
+  var w=img.naturalWidth||img.width;
+  var h=img.naturalHeight||img.height;
+  var canvas=document.createElement('canvas');
+  canvas.width=w; canvas.height=h;
+  var ctx=canvas.getContext('2d');
+  ctx.drawImage(img,0,0,w,h);
+  var id=ctx.getImageData(0,0,w,h);
+  var code=jsQR(id.data, w, h);
+  if(code && code.data){
+    setVal('qr-decode-out', code.data);
+    msg('ok','解码成功');
+  } else {
+    setVal('qr-decode-out','');
+    msg('error','未识别到二维码，请尝试更清晰的图片');
+  }
+}
+function qrDecodeClear(){
+  setVal('qr-decode-out','');
+  document.getElementById('qr-preview').src='';
+  document.getElementById('qr-preview').style.display='none';
+  document.getElementById('qr-file').value='';
+  msg('ok','已清空');
+}
 
 /* ---- hash 路由 ---- */
 function initHash(){
