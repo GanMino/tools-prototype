@@ -350,6 +350,14 @@ select.btn{appearance:none;-webkit-appearance:none}
 .search-box{display:flex;gap:10px;margin:18px 0 8px;align-items:center}
 .search-box .search-input{flex:1;padding:12px 14px;font-size:15px}
 
+/* curl 解析 */
+.curl-form{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
+.curl-form .field{margin-bottom:0}
+.curl-form textarea{flex:none;min-height:70px;resize:vertical}
+.curl-form .re-status{margin-bottom:0;white-space:pre-wrap}
+.curl-opts{display:flex;flex-wrap:wrap;gap:14px}
+.curl-opts label{font-size:13px;color:var(--gold-light);display:flex;align-items:center;gap:6px;cursor:pointer}
+
 /* ============ 消息框 ============ */
 .msg-box{
   position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
@@ -1330,6 +1338,56 @@ select.btn{appearance:none;-webkit-appearance:none}
         </div>
       </section>
 
+      <!-- curl 解析 -->
+      <section class="view view--tool" id="view-curl">
+        <div class="title-row"><div class="badge">CU</div><h2>curl 解析</h2></div>
+        <p class="tool-desc">curl 命令与结构化请求信息双向转换。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="parseCurlCmd()">curl → 结构</button>
+          <button class="btn" onclick="buildCurlCmd()">结构 → curl</button>
+          <button class="btn btn--gold" onclick="copyText('curl-in')">复制 curl</button>
+          <button class="btn btn--red" onclick="curlClear()">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">curl 命令</span><span class="hint">可编辑</span></div>
+            <textarea class="io" id="curl-in" spellcheck="false" placeholder="curl -X POST https://api.example.com/users -H 'Content-Type: application/json' -d '{&quot;name&quot;:&quot;link&quot;}'"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">请求结构</span><span class="hint">可编辑</span></div>
+            <div class="curl-form">
+              <div class="field"><label>URL</label><input class="io-input" id="curl-url" placeholder="https://api.example.com/users" oninput="updateCurlQuery()"></div>
+              <div class="field"><label>请求方法 Method</label>
+                <select class="io-input" id="curl-method">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                  <option value="PATCH">PATCH</option>
+                  <option value="HEAD">HEAD</option>
+                  <option value="OPTIONS">OPTIONS</option>
+                </select>
+              </div>
+              <div class="field"><label>请求头 Headers（每行一个 Key: Value）</label>
+                <textarea class="io" id="curl-headers" spellcheck="false" placeholder="Content-Type: application/json"></textarea>
+              </div>
+              <div class="field"><label>请求体 Body</label>
+                <textarea class="io" id="curl-body" spellcheck="false" placeholder='{"name":"link"}'></textarea>
+              </div>
+              <div class="field"><label>选项</label>
+                <div class="curl-opts">
+                  <label><input type="checkbox" id="curl-k"> -k 跳过证书校验</label>
+                  <label><input type="checkbox" id="curl-L"> -L 跟随重定向</label>
+                  <label><input type="checkbox" id="curl-compressed"> --compressed</label>
+                </div>
+              </div>
+              <div class="re-status" id="curl-query">Query 参数：（无）</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -1875,7 +1933,8 @@ var TOOLS = [
   {cat:'编码与转换', id:'sql',    name:'SQL 格式化', icon:'库', desc:'SQL 语句格式化（多方言）'},
   {cat:'文本工具',   id:'md',     name:'Markdown 预览', icon:'MD', desc:'Markdown 实时预览'},
   {cat:'文本工具',   id:'diff',   name:'文本 Diff 对比', icon:'比', desc:'两段文本差异对比'},
-  {cat:'生成器',     id:'qrdecode', name:'二维码解码', icon:'扫', desc:'识别二维码图片内容'}
+  {cat:'生成器',     id:'qrdecode', name:'二维码解码', icon:'扫', desc:'识别二维码图片内容'},
+  {cat:'调试工具',   id:'curl',  name:'curl 解析', icon:'CU', desc:'curl 命令与请求结构双向转换'}
 ];
 
 function renderMenu(){
@@ -2486,6 +2545,168 @@ document.addEventListener('keydown', function(e){
     if(s) setTimeout(function(){ s.focus(); }, 0);
   }
 });
+
+/* ---- curl 解析 ---- */
+var CURL_BS = String.fromCharCode(92);
+var CURL_LF = String.fromCharCode(10);
+var CURL_TAB = String.fromCharCode(9);
+
+function tokenizeCurl(cmd){
+  var lines = cmd.split(CURL_LF);
+  var buf = [];
+  for(var li=0; li<lines.length; li++){
+    var ln = lines[li];
+    if(ln.charAt(ln.length-1) === CURL_BS){ ln = ln.slice(0, ln.length-1); }
+    buf.push(ln);
+  }
+  cmd = buf.join(' ');
+  var tokens = [];
+  var i = 0, n = cmd.length;
+  while(i < n){
+    var c = cmd.charAt(i);
+    if(c === ' ' || c === CURL_TAB || c === CURL_LF){ i++; continue; }
+    var tok = '';
+    while(i < n){
+      c = cmd.charAt(i);
+      if(c === CURL_BS){
+        var nx = cmd.charAt(i+1);
+        if(nx === CURL_LF){ i += 2; continue; }
+        tok += nx; i += 2; continue;
+      }
+      if(c === "'"){
+        i++;
+        while(i < n && cmd.charAt(i) !== "'"){ tok += cmd.charAt(i); i++; }
+        i++; continue;
+      }
+      if(c === '"'){
+        i++;
+        while(i < n && cmd.charAt(i) !== '"'){
+          if(cmd.charAt(i) === CURL_BS){
+            var nx2 = cmd.charAt(i+1);
+            if(nx2 === '"' || nx2 === CURL_BS){ tok += nx2; i += 2; continue; }
+            tok += cmd.charAt(i); i++; continue;
+          }
+          tok += cmd.charAt(i); i++;
+        }
+        i++; continue;
+      }
+      if(c === ' ' || c === CURL_TAB || c === CURL_LF){ break; }
+      tok += c; i++;
+    }
+    tokens.push(tok);
+  }
+  return tokens;
+}
+
+function parseCurlCommand(cmd){
+  var tokens = tokenizeCurl(cmd);
+  var out = { url:'', method:'', headers:[], data:'', flags:[] };
+  var i = 0;
+  if(tokens.length && tokens[0].toLowerCase() === 'curl'){ i = 1; }
+  var dataParts = [];
+  while(i < tokens.length){
+    var t = tokens[i];
+    if(t === '-X' || t === '--request'){ out.method = tokens[++i] || ''; }
+    else if(t === '-H' || t === '--header'){ out.headers.push(tokens[++i] || ''); }
+    else if(t === '-d' || t === '--data' || t === '--data-raw' || t === '--data-binary' || t === '--data-ascii' || t === '--data-urlencode'){ dataParts.push(tokens[++i] || ''); }
+    else if(t === '-F' || t === '--form'){ dataParts.push(tokens[++i] || ''); }
+    else if(t === '-u' || t === '--user'){ out.basicAuth = tokens[++i] || ''; }
+    else if(t === '-A' || t === '--user-agent'){ out.headers.push('User-Agent: ' + (tokens[++i] || '')); }
+    else if(t === '-e' || t === '--referer'){ out.headers.push('Referer: ' + (tokens[++i] || '')); }
+    else if(t === '-b' || t === '--cookie'){ out.headers.push('Cookie: ' + (tokens[++i] || '')); }
+    else if(t === '-I' || t === '--head'){ out.method = 'HEAD'; }
+    else if(t === '-k' || t === '--insecure'){ out.flags.push('-k'); }
+    else if(t === '-L' || t === '--location'){ out.flags.push('-L'); }
+    else if(t === '--compressed'){ out.flags.push('--compressed'); }
+    else if(t === '--url'){ out.url = tokens[++i] || ''; }
+    else if(t.charAt(0) === '-'){ out.flags.push(t); }
+    else {
+      if(!out.url){ out.url = t; }
+      else { out.flags.push(t); }
+    }
+    i++;
+  }
+  if(dataParts.length){ out.data = dataParts.join('&'); }
+  if(!out.method){ out.method = out.data ? 'POST' : 'GET'; }
+  return out;
+}
+
+function shellQuote(s){
+  if(s === ''){ return "''"; }
+  var safe = true;
+  for(var i=0;i<s.length;i++){
+    var cc = s.charCodeAt(i);
+    var c = s.charAt(i);
+    var isAlnum = (cc>=48&&cc<=57)||(cc>=65&&cc<=90)||(cc>=97&&cc<=122);
+    var isSafe = isAlnum || c==='_' || c==='.' || c==='/' || c===':' || c==='?' || c==='=' || c==='&' || c==='%' || c==='+' || c==='~' || c===',' || c==='-' || c==='@';
+    if(!isSafe){ safe = false; break; }
+  }
+  if(safe){ return s; }
+  return "'" + s.split("'").join("'" + CURL_BS + "''") + "'";
+}
+
+function updateCurlQuery(){
+  var url = val('curl-url').trim();
+  var el = document.getElementById('curl-query');
+  if(!el){ return; }
+  if(!url){ el.textContent = 'Query 参数：（无）'; return; }
+  try{
+    var u = new URL(url);
+    var parts = [];
+    u.searchParams.forEach(function(v,k){ parts.push(k + ' = ' + v); });
+    el.textContent = parts.length ? ('Query 参数：' + CURL_LF + parts.join(CURL_LF)) : 'Query 参数：（无）';
+  }catch(e){ el.textContent = 'Query 参数：（URL 无效）'; }
+}
+
+function parseCurlCmd(){
+  var cmd = val('curl-in');
+  if(!cmd.trim()){ msg('error','请输入 curl 命令'); return; }
+  var r = parseCurlCommand(cmd);
+  if(!r.url){ msg('error','未识别到 URL'); return; }
+  setVal('curl-url', r.url);
+  setVal('curl-method', r.method || 'GET');
+  setVal('curl-headers', r.headers.join(CURL_LF));
+  setVal('curl-body', r.data || '');
+  document.getElementById('curl-k').checked = r.flags.indexOf('-k') >= 0;
+  document.getElementById('curl-L').checked = r.flags.indexOf('-L') >= 0;
+  document.getElementById('curl-compressed').checked = r.flags.indexOf('--compressed') >= 0;
+  updateCurlQuery();
+  msg('ok','已解析 curl 命令');
+}
+
+function buildCurlCmd(){
+  var url = val('curl-url').trim();
+  if(!url){ msg('error','请先填写 URL'); return; }
+  var method = val('curl-method');
+  var headers = val('curl-headers').split(CURL_LF).map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+  var body = val('curl-body');
+  var head = 'curl';
+  if(document.getElementById('curl-k').checked){ head += ' -k'; }
+  if(document.getElementById('curl-L').checked){ head += ' -L'; }
+  if(document.getElementById('curl-compressed').checked){ head += ' --compressed'; }
+  var parts = [head];
+  if(method && method !== 'GET'){ parts.push('-X ' + method); }
+  for(var i=0;i<headers.length;i++){ parts.push('-H ' + shellQuote(headers[i])); }
+  if(body){ parts.push('--data-raw ' + shellQuote(body)); }
+  parts.push(shellQuote(url));
+  var sep = ' ' + CURL_BS + CURL_LF + '  ';
+  setVal('curl-in', parts.join(sep));
+  updateCurlQuery();
+  msg('ok','已生成 curl 命令');
+}
+
+function curlClear(){
+  setVal('curl-in','');
+  setVal('curl-url','');
+  setVal('curl-method','GET');
+  setVal('curl-headers','');
+  setVal('curl-body','');
+  document.getElementById('curl-k').checked = false;
+  document.getElementById('curl-L').checked = false;
+  document.getElementById('curl-compressed').checked = false;
+  updateCurlQuery();
+  msg('ok','已清空');
+}
 
 /* ---- hash 路由 ---- */
 function initHash(){
