@@ -1346,6 +1346,7 @@ select.btn{appearance:none;-webkit-appearance:none}
           <button class="btn" onclick="parseCurlCmd()">curl → 结构</button>
           <button class="btn" onclick="buildCurlCmd()">结构 → curl</button>
           <button class="btn btn--blue" onclick="formatCurlJson()">格式化 JSON</button>
+          <button class="btn btn--blue" onclick="minifyCurlJson()">压缩成一行</button>
           <button class="btn btn--gold" onclick="copyText('curl-in')">复制 curl</button>
           <button class="btn btn--red" onclick="curlClear()">清空</button>
         </div>
@@ -2704,6 +2705,17 @@ function formatCurlJson(){
     setVal('curl-body', JSON.stringify(obj, null, 2));
     if(val('curl-url').trim()){ buildCurlCmd(); }
     msg('ok','JSON 已格式化' + (val('curl-url').trim() ? '，curl 已更新' : ''));
+  }catch(e){ msg('error','请求体不是合法 JSON：'+e.message); }
+}
+
+function minifyCurlJson(){
+  var body = val('curl-body');
+  if(!body.trim()){ msg('error','请求体为空'); return; }
+  try{
+    var obj = JSON.parse(body);
+    setVal('curl-body', JSON.stringify(obj));
+    if(val('curl-url').trim()){ buildCurlCmd(); }
+    msg('ok','JSON 已压缩成一行' + (val('curl-url').trim() ? '，curl 已更新' : ''));
   }catch(e){ msg('error','请求体不是合法 JSON：'+e.message); }
 }
 
