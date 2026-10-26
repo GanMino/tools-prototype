@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F8B800">
 <style>
 /* ============ 字体 ============ */
 @font-face{
@@ -396,6 +398,67 @@ select.btn{appearance:none;-webkit-appearance:none}
   .split-arrow .arrow{transform:rotate(90deg)}
   .toolbar{gap:10px;margin:8px 0 12px}
 }
+/* ============ 收藏 / 最近使用 ============ */
+.card{position:relative}
+.fav-star{
+  position:absolute;top:6px;right:6px;
+  width:26px;height:26px;display:grid;place-items:center;
+  font-size:15px;line-height:1;color:#8a7a5a;
+  cursor:pointer;background:transparent;border:none;padding:0;
+}
+.fav-star.on{color:var(--gold)}
+.quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:6px}
+.quick-grid .card{padding:10px 12px}
+.quick-grid .card .c-ico{width:30px;height:30px;font-size:11px;margin-bottom:6px}
+.quick-grid .card .c-name{font-size:11px;margin-bottom:0}
+.quick-grid .card .c-desc{display:none}
+.quick-empty{font-size:12px;color:#8a7a5a;padding:2px 2px 10px}
+
+/* ============ 主题按钮 ============ */
+.theme-btn{
+  width:34px;height:34px;margin-left:auto;flex:0 0 34px;
+  display:grid;place-items:center;font-size:15px;
+  background:var(--green);color:var(--gold-light);
+  border:3px solid #000;box-shadow:3px 3px 0 0 #000;cursor:pointer;padding:0;
+}
+
+/* ============ 亮色主题 ============ */
+body.light{
+  background-color:#f5ead0;
+  background-image:none;
+  color:#3a2a10;
+}
+body.light .sidebar,body.light .topbar{background:#fdf6e3;border-color:#3a2a10;box-shadow:4px 0 0 0 #3a2a10}
+body.light .topbar{box-shadow:0 4px 0 0 #3a2a10}
+body.light .brand{border-bottom-color:#3a2a10}
+body.light .brand .sub{color:#8a6d1f}
+body.light .nav-item{background:#f2e6cc;color:#3a2a10;border-color:#3a2a10;box-shadow:3px 3px 0 0 #3a2a10}
+body.light .nav-item:hover{background:#ecdcbc}
+body.light .nav-item.active{background:var(--gold);color:#000}
+body.light .nav-item .ico{background:#c8a24a;color:#2a1a08;border-color:#3a2a10}
+body.light .nav-cat{color:#8a6d1f}
+body.light .side-foot{border-top-color:#3a2a10}
+body.light #usage-label{color:#6a5530}
+body.light .pane,body.light .card{background:#fdf6e3;border-color:#3a2a10;box-shadow:5px 5px 0 0 #3a2a10}
+body.light .pane-head{border-bottom-color:#3a2a10}
+body.light .pane-head .hint,body.light .tool-desc,body.light .card .c-desc,body.light .quick-empty{color:#6a5530}
+body.light .io,body.light .io-input,body.light .re-hl,body.light .diff-out,body.light .md-preview{
+  background:#fffdf5;color:#2a1a08;border-color:#3a2a10;
+  box-shadow:inset 0 0 0 2px #d8c8a8;
+}
+body.light .io--out{background:#fffaf0;color:#4a3a18}
+body.light .btn{border-color:#3a2a10;box-shadow:4px 4px 0 0 #3a2a10}
+body.light .btn:active{box-shadow:0 0 0 0 #3a2a10}
+body.light .cat-title{color:#b8860b;text-shadow:2px 0 0 #3a2a10,-2px 0 0 #3a2a10,0 2px 0 #3a2a10,0 -2px 0 #3a2a10}
+body.light .title-row .badge{color:#000;border-color:#3a2a10}
+body.light .search-box .search-input{background:#fffdf5;color:#2a1a08}
+body.light .msg-box{background:#fffdf5;color:#2a1a08;border-color:#3a2a10}
+body.light ::-webkit-scrollbar-track{background:#e8dcc0;border-color:#3a2a10}
+body.light ::-webkit-scrollbar-thumb{background:#b08a4a;border-color:#3a2a10}
+body.light *{scrollbar-color:#b08a4a #e8dcc0}
+body.light .fav-star{color:#8a7a5a}
+body.light .fav-star.on{color:#d89020}
+
 </style>
 </head>
 <body>
@@ -429,6 +492,7 @@ select.btn{appearance:none;-webkit-appearance:none}
           <svg class="h" viewBox="0 0 8 8" shape-rendering="crispEdges"><path d="M0 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z" fill="#444444"/></svg>
         </div>
         <span id="usage-label" style="font-size:11px;color:#8a7a5a">今日使用 0 次</span>
+        <button class="theme-btn" id="theme-btn" title="切换亮/暗主题" onclick="toggleTheme()">☀</button>
       </div>
     </aside>
 
@@ -1390,20 +1454,185 @@ select.btn{appearance:none;-webkit-appearance:none}
         </div>
       </section>
 
+      <!-- AES 加解密 -->
+      <section class="view view--tool" id="view-aes">
+        <div class="title-row"><div class="badge">锁</div><h2>AES 加解密</h2></div>
+        <p class="tool-desc">AES 对称加解密（CBC/ECB，密钥为文本，输出 Base64）。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="calcAES()">执行</button>
+          <button class="btn btn--gold" onclick="copyText('aes-out')">复制结果</button>
+          <button class="btn btn--red" onclick="aesClear()">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">参数</span></div>
+            <div class="curl-form">
+              <div class="field"><label>模式</label>
+                <select class="io-input" id="aes-mode">
+                  <option value="encrypt">加密（明文 → 密文）</option>
+                  <option value="decrypt">解密（密文 → 明文）</option>
+                </select>
+              </div>
+              <div class="field"><label>加密方式</label>
+                <select class="io-input" id="aes-cipher">
+                  <option value="cbc">AES-CBC（需 IV）</option>
+                  <option value="ecb">AES-ECB（无需 IV）</option>
+                </select>
+              </div>
+              <div class="field"><label>密钥 Key（文本）</label><input class="io-input" id="aes-key" placeholder="my-secret-key"></div>
+              <div class="field"><label>IV（16 字节文本，ECB 忽略）</label><input class="io-input" id="aes-iv" placeholder="1234567890abcdef"></div>
+              <div class="field"><label>输入内容</label></div>
+              <textarea class="io" id="aes-in" spellcheck="false" placeholder="要加密的明文 或 要解密的 Base64 密文…"></textarea>
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果（只读）</span></div>
+            <textarea class="io io--out" id="aes-out" readonly spellcheck="false" placeholder="结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 密码强度 -->
+      <section class="view view--tool" id="view-pwdcheck">
+        <div class="title-row"><div class="badge">强</div><h2>密码强度</h2></div>
+        <p class="tool-desc">检测密码强度并给出改进建议。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="checkPassword()">检测</button>
+          <button class="btn btn--red" onclick="clearBoth('pwdcheck-in','pwdcheck-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">密码</span></div>
+            <div class="field"><label>密码</label><input class="io-input" id="pwdcheck-in" type="text" placeholder="输入要检测的密码"></div>
+            <div class="re-status" id="pwdcheck-bar">强度：—</div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果</span></div>
+            <textarea class="io io--out" id="pwdcheck-out" readonly spellcheck="false" placeholder="检测结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- JSON → TypeScript -->
+      <section class="view view--tool" id="view-j2ts">
+        <div class="title-row"><div class="badge">TS</div><h2>JSON → TypeScript</h2></div>
+        <p class="tool-desc">把 JSON 转成 TypeScript 接口定义。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="jsonToTs()">转换</button>
+          <button class="btn btn--gold" onclick="copyText('j2ts-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('j2ts-in','j2ts-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">JSON</span><span class="hint">可编辑</span></div>
+            <textarea class="io" id="j2ts-in" spellcheck="false" placeholder='{"name":"link","age":3,"tags":["a","b"]}'></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">TypeScript</span><span class="hint">只读</span></div>
+            <textarea class="io io--out" id="j2ts-out" readonly spellcheck="false" placeholder="interface Root { ... }"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 文本去重排序 -->
+      <section class="view view--tool" id="view-lines">
+        <div class="title-row"><div class="badge">序</div><h2>文本去重排序</h2></div>
+        <p class="tool-desc">按行去重、排序、反转、去空行。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="processLines()">处理</button>
+          <button class="btn btn--gold" onclick="copyText('lines-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('lines-in','lines-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">每行一项</span></div>
+            <div class="curl-opts" style="margin-bottom:8px">
+              <label><input type="checkbox" id="lines-dedupe" checked> 去重</label>
+              <label><input type="checkbox" id="lines-dropspace" checked> 去空行</label>
+              <label><input type="checkbox" id="lines-sort"> 升序排序</label>
+              <label><input type="checkbox" id="lines-reverse"> 反转顺序</label>
+            </div>
+            <textarea class="io" id="lines-in" spellcheck="false" placeholder="每行一条数据…"></textarea>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果（只读）</span></div>
+            <textarea class="io io--out" id="lines-out" readonly spellcheck="false" placeholder="处理结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 随机数 / 字符串 -->
+      <section class="view view--tool" id="view-rand">
+        <div class="title-row"><div class="badge">随</div><h2>随机数 / 字符串</h2></div>
+        <p class="tool-desc">生成随机整数或随机字符串。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="genRandNum()">随机数</button>
+          <button class="btn" onclick="genRandStr()">随机字符串</button>
+          <button class="btn btn--gold" onclick="copyText('rand-out')">复制结果</button>
+          <button class="btn btn--red" onclick="clearBoth('rand-out','rand-out')">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">参数</span></div>
+            <div class="curl-form">
+              <div class="field"><label>随机数范围（最小 / 最大）</label>
+                <div style="display:flex;gap:8px">
+                  <input class="io-input" id="rand-min" value="1">
+                  <input class="io-input" id="rand-max" value="100">
+                </div>
+              </div>
+              <div class="field"><label>随机字符串长度</label><input class="io-input" id="rand-len" value="16"></div>
+              <div class="field"><label>字符集</label>
+                <div class="curl-opts">
+                  <label><input type="checkbox" id="rand-upper" checked> 大写</label>
+                  <label><input type="checkbox" id="rand-lower" checked> 小写</label>
+                  <label><input type="checkbox" id="rand-num" checked> 数字</label>
+                  <label><input type="checkbox" id="rand-sym"> 符号</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">输出 OUTPUT</span><span class="hint">结果</span></div>
+            <textarea class="io io--out" id="rand-out" readonly spellcheck="false" placeholder="生成结果…"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 条形码 -->
+      <section class="view view--tool" id="view-barcode">
+        <div class="title-row"><div class="badge">条</div><h2>条形码生成</h2></div>
+        <p class="tool-desc">文本生成条形码（CODE128），可下载 SVG。</p>
+        <div class="toolbar">
+          <button class="btn" onclick="genBarcode()">生成</button>
+          <button class="btn btn--gold" onclick="downloadBarcode()">下载 SVG</button>
+          <button class="btn btn--red" onclick="barcodeClear()">清空</button>
+        </div>
+        <div class="split">
+          <div class="pane pane--in">
+            <div class="pane-head"><span class="tag">输入 INPUT</span><span class="hint">内容</span></div>
+            <div class="field"><label>条形码内容</label><input class="io-input" id="barcode-in" value="123456789012" placeholder="数字或文本"></div>
+          </div>
+          <div class="split-arrow"><div class="arrow"></div></div>
+          <div class="pane pane--out">
+            <div class="pane-head"><span class="tag">条形码</span><span class="hint">预览</span></div>
+            <div style="flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;background:#fff">
+              <svg id="barcode-svg"></svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
   <div class="msg-box" id="msg-box"><span class="m-cur"></span><span class="msg-text"></span></div>
 
-<script async src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
-<script async src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
-<script async src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script async src="https://cdn.jsdelivr.net/npm/cronstrue@2.50.0/dist/cronstrue-i18n.min.js"></script>
-<script async src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
-<script async src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script async src="https://cdn.jsdelivr.net/npm/sql-formatter@15.4.5/dist/sql-formatter.min.js"></script>
-<script async src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
-<script async src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
 function $(id){return document.getElementById(id)}
 
@@ -1423,7 +1652,15 @@ function showView(id){
   var items=document.querySelectorAll('.nav-item');
   for(var j=0;j<items.length;j++){items[j].classList.toggle('active',items[j].getAttribute('data-tool')===id)}
   closeSidebar();
-  if(id!=='home'){ addUsage(); }
+  if(id && id!=='home'){
+    addUsage();
+    addRecent(id);
+    preloadToolLibs(id);
+  } else if(id==='home'){
+    renderMenu();
+    var si=document.getElementById('home-search');
+    if(si && si.value){ filterTools(si.value); }
+  }
 }
 
 /* ---- 消息框 ---- */
@@ -1591,8 +1828,8 @@ function mqttLog(type, text){
   el.value += '['+ts+'] '+prefix+'  '+text+'\n';
   el.scrollTop = el.scrollHeight;
 }
-function mqttConnect(){
-  if(typeof mqtt==='undefined'){msg('error','MQTT 库未加载，请检查网络后刷新');return}
+async function mqttConnect(){
+  try{ await ensureLib('mqtt'); }catch(e){ msg('error','MQTT 库加载失败，请检查网络'); return; }
   var url=val('mqtt-url').trim();
   if(!url){msg('error','请输入 Broker 地址');return}
   if(mqClient){try{mqClient.end(true)}catch(e){}}
@@ -1655,8 +1892,8 @@ function genUUID(){
 }
 
 /* ---- 哈希 ---- */
-function calcHash(){
-  if(typeof CryptoJS==='undefined'){msg('error','哈希库未加载，请刷新后重试');return}
+async function calcHash(){
+  try{ await ensureLib('crypto-js'); }catch(e){ msg('error','哈希库加载失败，请检查网络'); return; }
   var src=val('hash-in');
   var algo=val('hash-algo');
   if(src===''){msg('error','请输入要计算的内容');return}
@@ -1781,10 +2018,10 @@ function colorClear(){
 }
 
 /* ---- 二维码 ---- */
-function genQR(){
+async function genQR(){
+  try{ await ensureLib('qrcode'); }catch(e){ msg('error','二维码库加载失败，请检查网络'); return; }
   var text=val('qr-text');
   if(!text){msg('error','请输入要编码的内容');return}
-  if(typeof qrcode==='undefined'){msg('error','二维码库未加载，请刷新');return}
   var ec=val('qr-ec');
   var qr;
   try{ qr=qrcode(0, ec); qr.addData(text); qr.make(); }
@@ -1873,8 +2110,8 @@ function parseURL(){
 }
 
 /* ---- HMAC ---- */
-function calcHMAC(){
-  if(typeof CryptoJS==='undefined'){msg('error','库未加载，请刷新');return}
+async function calcHMAC(){
+  try{ await ensureLib('crypto-js'); }catch(e){ msg('error','加密库加载失败，请检查网络'); return; }
   var m=val('hmac-msg'), k=val('hmac-key'), algo=val('hmac-algo');
   if(m===''){msg('error','请输入消息');return}
   var out='';
@@ -1936,8 +2173,21 @@ var TOOLS = [
   {cat:'文本工具',   id:'md',     name:'Markdown 预览', icon:'MD', desc:'Markdown 实时预览'},
   {cat:'文本工具',   id:'diff',   name:'文本 Diff 对比', icon:'比', desc:'两段文本差异对比'},
   {cat:'生成器',     id:'qrdecode', name:'二维码解码', icon:'扫', desc:'识别二维码图片内容'},
-  {cat:'调试工具',   id:'curl',  name:'curl 解析', icon:'CU', desc:'curl 命令与请求结构双向转换'}
+  {cat:'调试工具',   id:'curl',  name:'curl 解析', icon:'CU', desc:'curl 命令与请求结构双向转换'},
+  {cat:'哈希与安全', id:'aes',   name:'AES 加解密', icon:'锁', desc:'AES 对称加解密（CBC/ECB）'},
+  {cat:'哈希与安全', id:'pwdcheck', name:'密码强度', icon:'强', desc:'密码强度检测与建议'},
+  {cat:'编码与转换', id:'j2ts',  name:'JSON → TS', icon:'TS', desc:'JSON 转 TypeScript 接口'},
+  {cat:'文本工具',   id:'lines', name:'文本去重排序', icon:'序', desc:'按行去重 / 排序 / 反转 / 去空行'},
+  {cat:'生成器',     id:'rand',  name:'随机数/字符串', icon:'随', desc:'随机数与随机字符串'},
+  {cat:'生成器',     id:'barcode', name:'条形码生成', icon:'条', desc:'文本生成条形码'}
 ];
+
+function cardHTML(t, quick){
+  var on = isFav(t.id);
+  var star = quick ? '' : ('<button class="fav-star'+(on?' on':'')+'" data-fav="'+t.id+'" title="收藏/取消收藏">'+(on?'★':'☆')+'</button>');
+  var search = (t.name+' '+t.desc+' '+t.cat).toLowerCase().split('"').join('&quot;');
+  return '<a class="card" data-tool="'+t.id+'" data-search="'+search+'">'+star+'<div class="c-ico">'+t.icon+'</div><div class="c-name">'+t.name+'</div><div class="c-desc">'+t.desc+'</div></a>';
+}
 
 function renderMenu(){
   var nav=document.getElementById('nav');
@@ -1945,13 +2195,25 @@ function renderMenu(){
   var cats=[], seen={};
   TOOLS.forEach(function(t){ if(!seen[t.cat]){ seen[t.cat]=1; cats.push(t.cat); } });
   var navH='', gridH='';
+  var favs = getFavs().map(byId).filter(function(x){ return !!x; });
+  var recents = getRecents().map(byId).filter(function(x){ return !!x; });
+  if(favs.length || recents.length){
+    gridH += '<div class="quick-wrap">';
+    if(favs.length){
+      gridH += '<h3 class="cat-title">★ 收藏</h3><div class="quick-grid">' + favs.map(function(t){ return cardHTML(t,true); }).join('') + '</div>';
+    }
+    if(recents.length){
+      gridH += '<h3 class="cat-title">最近使用</h3><div class="quick-grid">' + recents.map(function(t){ return cardHTML(t,true); }).join('') + '</div>';
+    }
+    gridH += '</div>';
+  }
   cats.forEach(function(cat){
     navH += '<div class="nav-cat">'+cat+'</div>';
     gridH += '<h3 class="cat-title">'+cat+'</h3><div class="grid">';
     TOOLS.forEach(function(t){
       if(t.cat!==cat) return;
       navH += '<a class="nav-item" data-tool="'+t.id+'"><span class="ico">'+t.icon+'</span>'+t.name+'</a>';
-      gridH += '<a class="card" data-tool="'+t.id+'" data-search="'+(t.name+' '+t.desc+' '+t.cat).toLowerCase()+'"><div class="c-ico">'+t.icon+'</div><div class="c-name">'+t.name+'</div><div class="c-desc">'+t.desc+'</div></a>';
+      gridH += cardHTML(t,false);
     });
     gridH += '</div>';
   });
@@ -1959,10 +2221,93 @@ function renderMenu(){
   grid.innerHTML = gridH;
 }
 
+/* ---- 收藏 / 最近使用 ---- */
+function byId(id){ for(var i=0;i<TOOLS.length;i++){ if(TOOLS[i].id===id) return TOOLS[i]; } return null; }
+function getFavs(){ try{ return JSON.parse(localStorage.getItem('zelda-fav')||'[]'); }catch(e){ return []; } }
+function setFavs(a){ try{ localStorage.setItem('zelda-fav', JSON.stringify(a)); }catch(e){} }
+function isFav(id){ return getFavs().indexOf(id)>=0; }
+function toggleFav(id){
+  var a=getFavs(); var i=a.indexOf(id);
+  if(i>=0){ a.splice(i,1); } else { a.unshift(id); }
+  setFavs(a);
+  renderMenu();
+  msg('ok', i>=0?'已取消收藏':'已收藏');
+}
+function getRecents(){ try{ return JSON.parse(localStorage.getItem('zelda-recent')||'[]'); }catch(e){ return []; } }
+function addRecent(id){
+  var a=getRecents(); var i=a.indexOf(id);
+  if(i>=0) a.splice(i,1);
+  a.unshift(id);
+  if(a.length>6) a=a.slice(0,6);
+  try{ localStorage.setItem('zelda-recent', JSON.stringify(a)); }catch(e){}
+}
+
+/* ---- 主题切换 ---- */
+function applyTheme(t){
+  if(t==='light'){ document.body.classList.add('light'); } else { document.body.classList.remove('light'); }
+  var b=document.getElementById('theme-btn');
+  if(b){ b.textContent = (t==='light') ? '☾' : '☀'; }
+  try{ localStorage.setItem('zelda-theme', t); }catch(e){}
+}
+function toggleTheme(){
+  var cur = document.body.classList.contains('light') ? 'light' : 'dark';
+  applyTheme(cur==='light' ? 'dark' : 'light');
+}
+function initTheme(){
+  var t='dark';
+  try{ t = localStorage.getItem('zelda-theme') || 'dark'; }catch(e){}
+  applyTheme(t);
+}
+
+/* ---- CDN 库按需加载 ---- */
+var LIBS = {
+  mqtt:'https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js',
+  'crypto-js':'https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js',
+  qrcode:'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js',
+  cronstrue:'https://cdn.jsdelivr.net/npm/cronstrue@2.50.0/dist/cronstrue-i18n.min.js',
+  'js-yaml':'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js',
+  marked:'https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js',
+  'sql-formatter':'https://cdn.jsdelivr.net/npm/sql-formatter@15.4.5/dist/sql-formatter.min.js',
+  diff:'https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js',
+  jsqr:'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js',
+  jsbarcode:'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js'
+};
+var LIB_GLOBALS = {
+  mqtt:'mqtt', 'crypto-js':'CryptoJS', qrcode:'qrcode', cronstrue:'cronstrue',
+  'js-yaml':'jsyaml', marked:'marked', 'sql-formatter':'sqlFormatter',
+  diff:'Diff', jsqr:'jsQR', jsbarcode:'JsBarcode'
+};
+var _libPromises = {};
+function ensureLib(name){
+  if(_libPromises[name]) return _libPromises[name];
+  var g = LIB_GLOBALS[name];
+  if(window[g]){ _libPromises[name] = Promise.resolve(window[g]); return _libPromises[name]; }
+  _libPromises[name] = new Promise(function(resolve, reject){
+    var s = document.createElement('script');
+    s.src = LIBS[name];
+    s.async = true;
+    s.onload = function(){ resolve(window[g]); };
+    s.onerror = function(){ delete _libPromises[name]; reject(new Error('加载失败：' + name)); };
+    document.head.appendChild(s);
+  });
+  return _libPromises[name];
+}
+var TOOL_LIBS = {
+  mqtt:['mqtt'], hash:['crypto-js'], hmac:['crypto-js'], aes:['crypto-js'],
+  qr:['qrcode'], qrdecode:['jsqr'], cron:['cronstrue'],
+  jy:['js-yaml'], md:['marked'], sql:['sql-formatter'], diff:['diff'], barcode:['jsbarcode']
+};
+function preloadToolLibs(id){
+  var libs = TOOL_LIBS[id];
+  if(!libs) return;
+  libs.forEach(function(n){ ensureLib(n).catch(function(){}); });
+}
+
 /* 事件委托：点击带 data-tool 的元素切换视图 */
 document.addEventListener('click', function(e){
   var t=e.target;
   while(t && t!==document){
+    if(t.getAttribute && t.getAttribute('data-fav')){ toggleFav(t.getAttribute('data-fav')); return; }
     if(t.getAttribute && t.getAttribute('data-tool')){ showView(t.getAttribute('data-tool')); return; }
     t=t.parentNode;
   }
@@ -2188,7 +2533,8 @@ function cronComputeRuns(parsed, hasSec, hasYear, domSpecial, count){
   }
   return runs;
 }
-function debugCron(){
+async function debugCron(){
+  try{ await ensureLib('cronstrue'); }catch(e){ msg('error','cron 解析库加载失败，请检查网络'); return; }
   var fmt=val('cron-fmt');
   var expr=val('cron-in').trim();
   var statusEl=document.getElementById('cron-status');
@@ -2257,7 +2603,8 @@ function cronClear(){
 }
 
 /* ---- JSON ↔ YAML ---- */
-function jsonToYaml(){
+async function jsonToYaml(){
+  try{ await ensureLib('js-yaml'); }catch(e){ msg('error','YAML 库加载失败，请检查网络'); return; }
   var src=val('jy-json').trim();
   try{
     var obj = src==='' ? {} : JSON.parse(src);
@@ -2265,7 +2612,8 @@ function jsonToYaml(){
     msg('ok','JSON → YAML 完成');
   }catch(e){msg('error','JSON 解析失败：'+e.message)}
 }
-function yamlToJson(){
+async function yamlToJson(){
+  try{ await ensureLib('js-yaml'); }catch(e){ msg('error','YAML 库加载失败，请检查网络'); return; }
   var src=val('jy-yaml');
   try{
     var obj = jsyaml.load(src);
@@ -2430,15 +2778,15 @@ function imgClear(){
 }
 
 /* ---- Markdown ---- */
-function renderMarkdown(){
-  if(typeof marked==='undefined') return;
+async function renderMarkdown(){
+  try{ await ensureLib('marked'); }catch(e){ return; }
   var md=val('md-in');
   document.getElementById('md-preview').innerHTML = marked.parse(md);
 }
 
 /* ---- SQL 格式化 ---- */
-function formatSQL(){
-  if(typeof sqlFormatter==='undefined'){msg('error','SQL 库未加载，请刷新');return}
+async function formatSQL(){
+  try{ await ensureLib('sql-formatter'); }catch(e){ msg('error','SQL 库加载失败，请检查网络'); return; }
   var sql=val('sql-in');
   if(!sql.trim()){msg('error','请输入 SQL');return}
   var dialect=val('sql-dialect');
@@ -2450,8 +2798,8 @@ function formatSQL(){
 }
 
 /* ---- 文本 Diff ---- */
-function doDiff(){
-  if(typeof Diff==='undefined'){msg('error','diff 库未加载，请刷新');return}
+async function doDiff(){
+  try{ await ensureLib('diff'); }catch(e){ msg('error','diff 库加载失败，请检查网络'); return; }
   var oldText=val('diff-old');
   var newText=val('diff-new');
   var changes=Diff.diffLines(oldText, newText);
@@ -2488,8 +2836,8 @@ function qrDecodeFile(){
   };
   img.src=url;
 }
-function decodeQRFromImage(img){
-  if(typeof jsQR==='undefined'){msg('error','二维码解码库未加载，请刷新');return}
+async function decodeQRFromImage(img){
+  try{ await ensureLib('jsqr'); }catch(e){ msg('error','二维码解码库加载失败，请检查网络'); return; }
   var w=img.naturalWidth||img.width;
   var h=img.naturalHeight||img.height;
   var canvas=document.createElement('canvas');
@@ -2732,6 +3080,209 @@ function curlClear(){
   msg('ok','已清空');
 }
 
+/* ---- AES 加解密 ---- */
+async function calcAES(){
+  try{ await ensureLib('crypto-js'); }catch(e){ msg('error','加密库加载失败，请检查网络'); return; }
+  var mode=val('aes-mode'), cipher=val('aes-cipher');
+  var key=val('aes-key'), iv=val('aes-iv'), input=val('aes-in');
+  if(!key){ msg('error','请输入密钥 Key'); return; }
+  if(!input){ msg('error','请输入内容'); return; }
+  try{
+    var keyWA = CryptoJS.enc.Utf8.parse(key);
+    var cfg = { padding: CryptoJS.pad.Pkcs7 };
+    if(cipher==='cbc'){
+      if(!iv){ msg('error','CBC 模式需要 IV'); return; }
+      cfg.iv = CryptoJS.enc.Utf8.parse(iv);
+      cfg.mode = CryptoJS.mode.CBC;
+    } else {
+      cfg.mode = CryptoJS.mode.ECB;
+    }
+    var out;
+    if(mode==='encrypt'){
+      out = CryptoJS.AES.encrypt(input, keyWA, cfg).toString();
+    } else {
+      out = CryptoJS.AES.decrypt(input, keyWA, cfg).toString(CryptoJS.enc.Utf8);
+      if(!out){ throw new Error('解密失败（密钥/IV/密文不匹配）'); }
+    }
+    setVal('aes-out', out);
+    msg('ok', mode==='encrypt' ? '加密完成' : '解密完成');
+  }catch(e){ msg('error', '失败：' + e.message); }
+}
+function aesClear(){
+  setVal('aes-in',''); setVal('aes-out',''); setVal('aes-key',''); setVal('aes-iv','');
+  msg('ok','已清空');
+}
+
+/* ---- 密码强度 ---- */
+function checkPassword(){
+  var p = val('pwdcheck-in');
+  if(!p){ msg('error','请输入密码'); return; }
+  var NL = String.fromCharCode(10);
+  var score = 0, tips = [];
+  if(p.length >= 8) score++; else tips.push('长度至少 8 位');
+  if(p.length >= 12) score++;
+  if(/[a-z]/.test(p) && /[A-Z]/.test(p)) score++; else tips.push('混合大小写');
+  if(/[0-9]/.test(p)) score++; else tips.push('加入数字');
+  if(/[^A-Za-z0-9]/.test(p)) score++; else tips.push('加入符号');
+  if(/(.)\1{2,}/.test(p)){ score--; tips.push('避免连续重复字符'); }
+  if(/^(123|abc|qwe|password|admin|111|000)/i.test(p)){ score = Math.min(score, 1); tips.push('避免常见弱口令'); }
+  if(score < 0) score = 0;
+  if(score > 5) score = 5;
+  var levels = ['极弱','弱','中','较强','强','很强'];
+  var level = levels[score] || '未知';
+  var bar = document.getElementById('pwdcheck-bar');
+  if(bar){ bar.textContent = '强度：' + level + '（' + score + '/5）'; bar.style.color = score >= 4 ? '#B8F818' : (score >= 2 ? '#FC9838' : '#E4000F'); }
+  var out = [
+    '密码长度：' + p.length,
+    '强度评分：' + score + '/5（' + level + '）',
+    '包含小写：' + (/[a-z]/.test(p) ? '是' : '否'),
+    '包含大写：' + (/[A-Z]/.test(p) ? '是' : '否'),
+    '包含数字：' + (/[0-9]/.test(p) ? '是' : '否'),
+    '包含符号：' + (/[^A-Za-z0-9]/.test(p) ? '是' : '否'),
+    '建议：' + (tips.length ? tips.join('；') : '很好，保持')
+  ];
+  setVal('pwdcheck-out', out.join(NL));
+  msg('ok','检测完成');
+}
+
+/* ---- JSON → TypeScript ---- */
+function jsonToTs(){
+  var src = val('j2ts-in').trim();
+  if(!src){ msg('error','请输入 JSON'); return; }
+  var obj;
+  try{ obj = JSON.parse(src); }catch(e){ msg('error','JSON 解析失败：' + e.message); return; }
+  var NL = String.fromCharCode(10);
+  var lines = [];
+  function pascal(s){ return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Item'; }
+  function baseType(v){
+    if(v === null) return 'null';
+    if(Array.isArray(v)) return 'any[]';
+    if(typeof v === 'string') return 'string';
+    if(typeof v === 'number') return 'number';
+    if(typeof v === 'boolean') return 'boolean';
+    return 'any';
+  }
+  function emit(o, name){
+    var fields = [];
+    Object.keys(o).forEach(function(k){
+      var v = o[k];
+      if(Array.isArray(v)){
+        if(v.length && v[0] && typeof v[0]==='object' && !Array.isArray(v[0])){
+          emit(v[0], pascal(k));
+          fields.push('  ' + k + ': ' + pascal(k) + '[];');
+        } else {
+          fields.push('  ' + k + ': ' + baseType(v.length ? v[0] : null) + '[];');
+        }
+      } else if(v && typeof v === 'object'){
+        emit(v, pascal(k));
+        fields.push('  ' + k + ': ' + pascal(k) + ';');
+      } else {
+        fields.push('  ' + k + ': ' + baseType(v) + ';');
+      }
+    });
+    lines.push('interface ' + pascal(name) + ' {');
+    lines.push(fields.join(NL));
+    lines.push('}');
+  }
+  if(Array.isArray(obj)){
+    if(obj.length && obj[0] && typeof obj[0]==='object'){
+      emit(obj[0], 'Item');
+      lines.push('type Root = Item[];');
+    } else {
+      lines.push('type Root = ' + baseType(obj.length ? obj[0] : null) + '[];');
+    }
+  } else if(obj && typeof obj === 'object'){
+    emit(obj, 'Root');
+  } else {
+    lines.push('type Root = ' + baseType(obj) + ';');
+  }
+  setVal('j2ts-out', lines.join(NL));
+  msg('ok','转换完成');
+}
+
+/* ---- 文本去重排序 ---- */
+function processLines(){
+  var text = val('lines-in');
+  if(!text){ msg('error','请输入文本'); return; }
+  var NL = String.fromCharCode(10);
+  var arr = text.split(NL);
+  if(document.getElementById('lines-dropspace').checked){
+    arr = arr.filter(function(s){ return s.trim() !== ''; });
+  }
+  if(document.getElementById('lines-dedupe').checked){
+    var seen = {}, out = [];
+    arr.forEach(function(s){ if(!seen[s]){ seen[s]=1; out.push(s); } });
+    arr = out;
+  }
+  if(document.getElementById('lines-sort').checked){
+    arr.sort(function(a,b){ return a.localeCompare(b); });
+  }
+  if(document.getElementById('lines-reverse').checked){
+    arr.reverse();
+  }
+  setVal('lines-out', arr.join(NL));
+  msg('ok','处理完成，共 ' + arr.length + ' 行');
+}
+
+/* ---- 随机数 / 字符串 ---- */
+function genRandNum(){
+  var min = parseInt(val('rand-min'),10);
+  var max = parseInt(val('rand-max'),10);
+  if(isNaN(min) || isNaN(max)){ msg('error','请输入有效的最小/最大值'); return; }
+  if(min > max){ var t=min; min=max; max=t; }
+  var range = max - min + 1;
+  var arr = new Uint32Array(1);
+  if(window.crypto && crypto.getRandomValues){ crypto.getRandomValues(arr); }
+  else { arr[0] = Math.floor(Math.random() * 0xffffffff); }
+  setVal('rand-out', String(min + (arr[0] % range)));
+  msg('ok','已生成随机数');
+}
+function genRandStr(){
+  var len = parseInt(val('rand-len'),10);
+  if(isNaN(len) || len < 1) len = 16;
+  if(len > 4096) len = 4096;
+  var sets = '';
+  if(document.getElementById('rand-upper').checked) sets += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if(document.getElementById('rand-lower').checked) sets += 'abcdefghijklmnopqrstuvwxyz';
+  if(document.getElementById('rand-num').checked) sets += '0123456789';
+  if(document.getElementById('rand-sym').checked) sets += '!@#$%^&*()-_=+[]{};:,.<>?';
+  if(!sets){ msg('error','请至少选择一类字符'); return; }
+  var arr = new Uint32Array(len);
+  if(window.crypto && crypto.getRandomValues){ crypto.getRandomValues(arr); }
+  else { for(var i=0;i<len;i++) arr[i] = Math.floor(Math.random() * 0xffffffff); }
+  var out = '';
+  for(var j=0;j<len;j++){ out += sets.charAt(arr[j] % sets.length); }
+  setVal('rand-out', out);
+  msg('ok','已生成 ' + len + ' 位随机字符串');
+}
+
+/* ---- 条形码 ---- */
+async function genBarcode(){
+  try{ await ensureLib('jsbarcode'); }catch(e){ msg('error','条形码库加载失败，请检查网络'); return; }
+  var text = val('barcode-in');
+  if(!text){ msg('error','请输入条形码内容'); return; }
+  try{
+    JsBarcode('#barcode-svg', text, { format:'CODE128', width:2, height:80, displayValue:true, background:'#ffffff', lineColor:'#000000', margin:10 });
+    msg('ok','条形码已生成');
+  }catch(e){ msg('error','生成失败：' + e.message); }
+}
+function downloadBarcode(){
+  var svg = document.getElementById('barcode-svg');
+  if(!svg || !svg.innerHTML){ msg('error','请先生成条形码'); return; }
+  var blob = new Blob([svg.outerHTML], { type:'image/svg+xml' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'barcode.svg';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  msg('ok','已开始下载 SVG');
+}
+function barcodeClear(){
+  document.getElementById('barcode-svg').innerHTML = '';
+  setVal('barcode-in','');
+  msg('ok','已清空');
+}
+
 /* ---- hash 路由 ---- */
 function initHash(){
   var h=location.hash.replace('#','');
@@ -2740,7 +3291,13 @@ function initHash(){
 window.addEventListener('hashchange',initHash);
 renderMenu();
 updateUsageUI();
+initTheme();
 initHash();
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
 </script>
 </body>
 </html>
